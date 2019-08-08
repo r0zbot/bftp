@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include "../ext/socket.h"
-#include "../hdr/error.h"
-#include "../hdr/util.h"
 #include "connection_handler.h"
 
 /**
@@ -17,7 +11,8 @@ start_connection_handler()
 	printf("bftp escutando na porta %d...\n", socket_port(s));
 	
 	while (true) {
-		socket_listen(s);
+		int connfd = socket_listen(s);
+		if (!fork()) start_client_handler(s, connfd);
 	}
 }
 

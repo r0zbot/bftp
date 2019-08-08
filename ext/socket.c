@@ -270,8 +270,11 @@ socket_write(int vargc, ...)
 	/* attempts to determine buffersize */
 	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	if (!buffersize) buffersize = strlen(buffer);
-	// TODO: same thing as socket_read
-    return send(s -> sockfd, buffer, buffersize, flags);
+	// TODO: how do we handle buffersize still being == 0?
+	/* servidor -> cliente */
+	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
+	/* cliente -> servidor */
+    else return send(s -> sockfd, buffer, buffersize, flags);
 }
 
 /**
