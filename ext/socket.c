@@ -99,13 +99,13 @@ socket_open(int vargc, ...)
 }
 
 /**
- * socket_await(): waits for client connection - blocking call
+ * socket_listen(): waits for client connection - blocking call
  * @s: pointer to the Socket which will be used
  *
  * @return: file descriptor int for the recently accepted connection
  */
 int
-socket_await(Socket *s)
+socket_listen(Socket *s)
 {
     /* message-oriented error handling */
     if (!(s -> type == SOCK_STREAM || s -> type == SOCK_SEQPACKET)) return -1;

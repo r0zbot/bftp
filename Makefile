@@ -8,7 +8,7 @@ DATDIR	= data
 
 CC	= gcc
 TARGET	= bftp
-CFLAGS	= -std=c99 -Ofast -msse2 -march=native -Wall -Wextra -Wpedantic -I$(HDRDIR)
+CFLAGS	= -std=c99 -Ofast -msse2 -march=native -Wall -Wextra -Wpedantic 
 LFLAGS	=
 
 SOURCES	:= $(wildcard $(SRCDIR)/*.c)
@@ -16,15 +16,14 @@ BINARIES:= $(wildcard $(BINDIR)/*.c)
 EXTERNS	:= $(wildcard $(EXTDIR)/*.c)
 HEADERS := $(wildcard $(HDRDIR)/*.h)
 OBJECTS	:= $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-EXAMPLES:= $(BINARIES:$(BINDIR)/%.c=$(OBJDIR)/%.o)
 EXT_OBJ	:= $(EXTERNS:$(EXTDIR)/%.c=$(OBJDIR)/%.o)
 DEPS	:= $(OBJECTS:$(OBJDIR)/%.o=$(DEPDIR)/%.d)
 
 REMOVE	:= rm -rf
 
 # Linking
-$(TARGET): $(OBJECTS) $(EXT_OBJ) $(CMN_OBJ) $(EXAMPLES)
-		$(CC) $(LFLAGS) -o $@ $(OBJECTS) $(EXT_OBJ) $(CMN_OBJ) $(EXAMPLES)
+$(TARGET): $(OBJECTS) $(EXT_OBJ)
+		$(CC) $(LFLAGS) -o $@ $(OBJECTS) $(EXT_OBJ)
 		@echo "Linking complete"
 
 -include $(DEPS)
@@ -35,13 +34,6 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 		mkdir -p $(DEPDIR)
 		$(CC) -c $(CFLAGS) $< -o $@
 		$(CC) -I$(HDRDIR) -MM -MT '$(OBJDIR)/$*.o' $(SRCDIR)/$*.c > $(DEPDIR)/$*.d
-		@echo "Compiled $<"
-
-$(EXAMPLES): $(OBJDIR)/%.o : $(BINDIR)/%.c
-		mkdir -p $(OBJDIR)
-		mkdir -p $(DEPDIR)
-		$(CC) -c $(CFLAGS) $< -o $@
-		$(CC) -I$(HDRDIR) -MM -MT '$(OBJDIR)/$*.o' $(BINDIR)/$*.c > $(DEPDIR)/$*.d
 		@echo "Compiled $<"
 
 $(EXT_OBJ): $(OBJDIR)/%.o : $(EXTDIR)/%.c
