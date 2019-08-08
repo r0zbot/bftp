@@ -7,4 +7,5 @@
 #include "../hdr/util.h"
 #include "client_handler.h"
 
-int start_connection_handler();
+void start_connection_handler();
+void stop_connection_handler();

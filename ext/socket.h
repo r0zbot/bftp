@@ -43,6 +43,9 @@ socket_test();
 int
 socket_port(Socket *s);
 
+void
+socket_fin(Socket *s);
+
 /* These macros will prepend the number of args before function calls */
 
 #define _NUM_ARGS(X100, X99, X98, X97, X96, X95, X94, X93, X92, X91, X90, X89, \

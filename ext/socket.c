@@ -157,6 +157,10 @@ socket_read(int vargc, ...)
 	
     /* wipes buffer clean */
     memset(buffer, 0, buffersize);
+//	/* server -> client */
+//	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
+//	/* client -> server */
+//	else return send(s -> sockfd, buffer, buffersize, flags);
 	
     return recv(s -> connfd, buffer, buffersize, flags);
 }
@@ -271,9 +275,9 @@ socket_write(int vargc, ...)
 	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	if (!buffersize) buffersize = strlen(buffer);
 	// TODO: how do we handle buffersize still being == 0?
-	/* servidor -> cliente */
+	/* server -> client */
 	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
-	/* cliente -> servidor */
+	/* client -> server */
     else return send(s -> sockfd, buffer, buffersize, flags);
 }
 
@@ -286,6 +290,17 @@ socket_close(Socket *s)
 {
     close(s -> sockfd);
     free(s);
+}
+
+/**
+ * socket_fin(): closes connfd
+ * @s: socket which will finish connection with client
+ */
+void
+socket_fin(Socket *s)
+{
+	shutdown(s -> connfd, SHUT_RDWR);
+	close(s -> connfd);
 }
 
 /**
