@@ -32,6 +32,7 @@ start_client_handler(Socket *s)
 		if 		(strncmpi(buffer, "USER", 4) == 0) {
 			strncpy(user, buffer + 4, MAX_USER_LENGTH);
 			pass[0] = '\0';
+			// TODO: reproduzir respostas do proftpd
 			socket_write(s, "331 usuário ok, envie senha\n");
 		}
 		else if (strncmpi(buffer, "PASS", 4) == 0) {
