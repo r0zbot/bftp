@@ -25,7 +25,7 @@ void
 stop_connection_handler()
 {
 	sigint_sent = true;
-	socket_close(s);
 	//TODO: kill todas as childs
+	socket_close(s);
 }
 

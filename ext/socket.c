@@ -81,6 +81,7 @@ socket_open(int vargc, ...)
 
     if (bind(s -> sockfd, (struct sockaddr *) &s -> servaddr, sizeof(struct sockaddr_in)) == -1) {
         fprintf(stderr, "socket_open: cannot bind new socket\n");
+		// TODO: quit
         return NULL;
     }
 
@@ -288,7 +289,8 @@ socket_write(int vargc, ...)
 void
 socket_close(Socket *s)
 {
-    close(s -> sockfd);
+	shutdown(s -> sockfd, SHUT_RDWR);
+	close(s -> sockfd);
     free(s);
 }
 
