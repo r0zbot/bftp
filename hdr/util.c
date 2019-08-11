@@ -18,3 +18,28 @@ char* concatf(const char* fmt, ...) {
     }
     return buf;
 }
+
+int
+strncmpi(const char* s1, const char* s2, size_t n)
+{
+    while (n--) {
+        if (*s1 == tolower(*s2) || *s1 == toupper(*s2)) {
+            s1++;
+            s2++;
+        }
+        else return 1;
+    }
+    return 0;
+}
+
+int
+stripln(char* str, size_t n)
+{
+    for (unsigned long i = 0; i < n && str[i] != '\0'; ++i) {
+        if(str[i] == '\n' || str[i] == '\r'){
+            str[i] = '\0';
+            return 1;
+        }
+    }
+    return 0;
+}

@@ -3,19 +3,6 @@
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
 
-int
-strncmpi(const char* s1, const char* s2, size_t n)
-{
-	while (n--) {
-		if (*s1 == tolower(*s2) || *s1 == toupper(*s2)) {
-			s1++;
-			s2++;
-		}
-		else return 1;
-	}
-	return 0;
-}
-
 void
 start_client_handler(Socket *s)
 {
@@ -28,18 +15,20 @@ start_client_handler(Socket *s)
 	bool logged = false;
 	
 	while (socket_read(s, buffer) > 0) {
+	    stripln(buffer, BUFFER_SIZE); //remove os \r e \n
 		/* input do usuário */
 		if (strncmpi(buffer, "USER", 4) == 0) {
-			strncpy(user, buffer + 4, MAX_USER_LENGTH);
+		    // TODO: consertar quando usuario vazio
+			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			fsocket_write(s, "331 Password required for %s\n", user);
 		}
 		else if (strncmpi(buffer, "PASS", 4) == 0) {
 			if (!strlen(user)) socket_write(s, "503 Login with USER first\n");
-			else if (strncmp(buffer+4, "teste123", MAX_PASS_LENGTH) != 0) socket_write(s, "530 Login incorrect.\n");
+			else if (strncmp(buffer+5, "teste123", MAX_PASS_LENGTH) != 0) socket_write(s, "530 Login incorrect.\n");
 			else {
-				strncpy(pass, buffer + 4, MAX_PASS_LENGTH);
-				socket_write(s, "230 User %s logged in\n", user);
+				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
+				socket_write(s, "230 User %s logged in\n", user); // TODO: descobrir pq da pau aqui
 			}
 		}
 		// TODO: todos outros comandos possíveis
@@ -48,8 +37,9 @@ start_client_handler(Socket *s)
 			socket_fin(s);
 		}
         else if (strncmpi(buffer, "DEBUG", 5) == 0) {
-            fsocket_write(s, "User: %s", user);
-            fsocket_write(s, "Pass: %s", pass);
+            fsocket_write(s, "User: %s\n", user);
+            fsocket_write(s, "Pass: %s\n", pass);
+            fsocket_write(s, "Buffer: %s\n", buffer);
         }
         else{
             fsocket_write(s, "500 %s not understood\n", buffer);
