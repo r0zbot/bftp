@@ -15,7 +15,8 @@
 #elif __APPLE__
 	#include <malloc/malloc.h>
 	#define MALLOC_SIZE(x) malloc_size(x)
-#elif __linux__
+#else
+/* Both linux and cygwin have the same path */
 	#include <malloc.h>
     #define MALLOC_SIZE(x) malloc_usable_size(x)
 #endif
