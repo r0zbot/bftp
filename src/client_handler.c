@@ -21,7 +21,7 @@ start_client_handler(Socket *s)
 {
 	char *buffer = malloc(sizeof(char) * BUFFER_SIZE);
 	check_null(buffer, "client_handler: não foi possível alocar buffer");
-	socket_write(s, "220 *** servidor bftp ***\n");
+	socket_write(s, "220 BFTP - Batista's FTP Server ***\n");
 	
 	char *user = malloc(sizeof(char) * MAX_USER_LENGTH);
 	char *pass = malloc(sizeof(char) * MAX_PASS_LENGTH);
@@ -29,17 +29,17 @@ start_client_handler(Socket *s)
 	
 	while (socket_read(s, buffer) > 0) {
 		/* input do usuário */
-		if 		(strncmpi(buffer, "USER", 4) == 0) {
+		if (strncmpi(buffer, "USER", 4) == 0) {
 			strncpy(user, buffer + 4, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			// TODO: reproduzir respostas do proftpd
-			socket_write(s, "331 usuário ok, envie senha\n");
+			fsocket_write(s, "331 Password required for %s\n", user);
 		}
 		else if (strncmpi(buffer, "PASS", 4) == 0) {
 			if (!strlen(user)) socket_write(s, "envie usuário primeiro\n");
 			else {
 				strncpy(pass, buffer + 4, MAX_PASS_LENGTH);
-				socket_write(s, "230 usuário logado\n");
+				socket_write(s, "230 User %s logged in\n", user);
 			}
 		}
 		// TODO: todos outros comandos possíveis
@@ -48,6 +48,11 @@ start_client_handler(Socket *s)
 			socket_fin(s);
 			break;
 		}
+        else if (strncmpi(buffer, "DEBUG", 5) == 0) {
+            fsocket_write(s, "User: %s", user);
+            fsocket_write(s, "Pass: %s", pass);
+            break;
+        }
 		
 		/* estado do login */
 		if (strlen(user) && strlen(pass)) logged = true;

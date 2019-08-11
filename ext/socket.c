@@ -20,13 +20,6 @@
     #define MALLOC_SIZE(x) malloc_usable_size(x)
 #endif
 
-/* Data structure that holds all the required info */
-struct Socket {
-    int sockfd, connfd;
-    struct sockaddr_in servaddr, cliaddr;
-    int type, protocol;
-};
-
 /**
  * socket_open(): opens a port and returns its Socket pointer
  * @port: # of the port we wish to open
@@ -273,7 +266,7 @@ socket_write(int vargc, ...)
     }
     va_end(vargp);
 	/* attempts to determine buffersize */
-	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
+	// if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	if (!buffersize) buffersize = strlen(buffer);
 	// TODO: how do we handle buffersize still being == 0?
 	/* server -> client */

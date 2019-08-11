@@ -8,7 +8,7 @@ Socket *s;
 void
 start_connection_handler()
 {
-	s = socket_open(21);
+	s = socket_open(2113);
 	check_null(listen, "connection_handler: não foi possível criar a socket");
 	printf("bftp escutando na porta %d...\n", socket_port(s));
 	
@@ -28,4 +28,3 @@ stop_connection_handler()
 	//TODO: kill todas as childs
 	socket_close(s);
 }
-

@@ -9,4 +9,6 @@
 
 #define check_null(ptr, msg) { if (!ptr) exit(msg) }
 
+char* concatf(const char* fmt, ...);
+
 #endif /* _UTIL_H_ */
