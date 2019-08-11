@@ -16,7 +16,7 @@
 	#include <malloc/malloc.h>
 	#define MALLOC_SIZE(x) malloc_size(x)
 #elif __linux__
-	#include <malloc/malloc.h>
+	#include <malloc.h>
     #define MALLOC_SIZE(x) malloc_usable_size(x)
 #endif
 
