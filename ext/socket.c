@@ -146,8 +146,6 @@ socket_read(int vargc, ...)
     }
     va_end(vargp);
 	/* attempts to determine buffersize */
-	if (!buffersize) buffersize = strlen(buffer);
-	// TODO: dá pra inferir tamanho da struct?
 	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	// TODO: how do we handle buffersize still being == 0?
 	
