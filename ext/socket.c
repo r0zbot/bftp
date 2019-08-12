@@ -146,8 +146,9 @@ socket_read(int vargc, ...)
     }
     va_end(vargp);
 	/* attempts to determine buffersize */
-	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	if (!buffersize) buffersize = strlen(buffer);
+	// TODO: dá pra inferir tamanho da struct?
+	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	// TODO: how do we handle buffersize still being == 0?
 	
     /* wipes buffer clean */
@@ -267,8 +268,9 @@ socket_write(int vargc, ...)
     }
     va_end(vargp);
 	/* attempts to determine buffersize */
-	// if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	if (!buffersize) buffersize = strlen(buffer);
+	// TODO: dá pra inferir tamanho da struct?
+	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
 	// TODO: how do we handle buffersize still being == 0?
 	/* server -> client */
 	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
