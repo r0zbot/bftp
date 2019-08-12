@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 // Code from https://stackoverflow.com/questions/24442459/returning-formatted-string-from-c-function
 char* concatf(const char* fmt, ...) {

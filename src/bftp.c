@@ -11,7 +11,7 @@ void sigint_handler()
  * main()
  */
 int
-main(int argc, char **argv)
+main()
 {
 	signal(SIGINT, sigint_handler);
 	start_connection_handler();

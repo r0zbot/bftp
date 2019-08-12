@@ -5,6 +5,6 @@
 #include <ctype.h>
 #include "../ext/socket.h"
 #include "../hdr/error.h"
-#include "../hdr/util.h"
+#include "util.h"
 
 void start_client_handler(Socket *s);

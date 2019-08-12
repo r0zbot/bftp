@@ -28,7 +28,7 @@ start_client_handler(Socket *s)
 			else if (strncmp(buffer+5, "teste123", MAX_PASS_LENGTH) != 0) socket_write(s, "530 Login incorrect.\n");
 			else {
 				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
-				socket_write(s, "230 User %s logged in\n", user); // TODO: descobrir pq da pau aqui
+				fsocket_write(s, "230 User %s logged in\n", user); // TODO: descobrir pq da pau aqui
 			}
 		}
 		// TODO: todos outros comandos possíveis
