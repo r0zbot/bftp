@@ -47,6 +47,7 @@ start_client_handler(Socket *s, int *status)
 		    // TODO: consertar quando usuario vazio
 			// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
 			// TODO: o que acontece se um usuário já logado tenta rodar USER?
+			// TODO: tirar \n das responses?
 			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			socket_writef(s, "331 Password required for %s\n", user);
@@ -72,16 +73,26 @@ start_client_handler(Socket *s, int *status)
             socket_writef(s, "Buffer: %s\n", buffer);
         }
         else if (strncmpi(buffer, "PWD", 3) == 0) {
-            char cwd[PATH_MAX];
-            getcwd(cwd, sizeof(cwd));
-            socket_writef(s, "257 \"%s\" is the current directory\n", cwd);
+			if (logged) {
+				char cwd[PATH_MAX];
+				getcwd(cwd, sizeof(char) * PATH_MAX);
+				socket_writef(s, "257 \"%s\" is the current directory\n", cwd);
+			}
+			else {
+				; //TODO: o que responder qd nao houver credenciais validas?
+			}
         }
         else if (strncmpi(buffer, "LIST", 4) == 0) {
-            char cwd[PATH_MAX];
-            getcwd(cwd, sizeof(cwd));
-            char *list = listdir(cwd);
-            socket_write(s, list);
-            free(list);
+			if (logged) {
+				char cwd[PATH_MAX];
+				getcwd(cwd, sizeof(cwd));
+				char *list = listdir(cwd);
+				socket_write(s, list);
+				free(list);
+			}
+			else {
+				; //TODO: o que responder qd nao houver credenciais validas?
+			}
         }
         else {
             socket_writef(s, "500 %s not understood\n", buffer);

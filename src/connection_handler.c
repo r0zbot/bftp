@@ -17,7 +17,7 @@ void
 start_connection_handler(int *status)
 {
 	*status = CONNECTION;
-	s = socket_open(213);
+	s = socket_open(21);
 	
 	printf("bftp escutando na porta %d...\n", socket_port(s));
 	
