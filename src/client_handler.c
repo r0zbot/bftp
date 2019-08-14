@@ -40,19 +40,20 @@ start_client_handler(Socket *s, int *status)
 	bool logged = false;
 	while (socket_read(s, buffer) > 0) {
 	    stripln(buffer, BUFFER_SIZE); //remove os \r e \n
+		// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
+		// TODO: tirar \n das responses?
 		
-		/* input do usuário */
-		if (strncmpi(buffer, "USER", 4) == 0) {
-		    // TODO: consertar quando usuario vazio
-			// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
-			// TODO: o que acontece se um usuário já logado tenta rodar USER?
-			// TODO: tirar \n das responses?
-			// TODO: anon login?: 331 Anonymous login ok, send your complete email address as your password
+		/******************************* USER *********************************/
+		// TODO: consertar quando usuario vazio
+		// TODO: o que acontece se um usuário já logado tenta rodar USER?
+		// TODO: anon login?: 331 Anonymous login ok, send your complete email address as your password
+		if (!strncmpi(buffer, "USER", 4)) {
 			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			socket_writef(s, "331 Password required for %s\n", user);
 		}
-		else if (strncmpi(buffer, "PASS", 4) == 0) {
+		/******************************* PASS *********************************/
+		else if (!strncmpi(buffer, "PASS", 4)) {
 			if (!strlen(user))
 				socket_write(s, "503 Login with USER first\n");
 			else if (strncmp(buffer + 5, "teste123", MAX_PASS_LENGTH))
@@ -62,11 +63,13 @@ start_client_handler(Socket *s, int *status)
 				socket_writef(s, "230 User %s logged in\n", user);
 			}
 		}
-		else if (strncmpi(buffer, "QUIT", 4) == 0) {
+		/******************************* QUIT *********************************/
+		else if (!strncmpi(buffer, "QUIT", 4)) {
 			socket_write(s, "221 Goodbye.\n");
 			socket_fin(s);
 		}
-        else if (strncmpi(buffer, "PWD", 3) == 0) {
+		/******************************** PWD *********************************/
+        else if (!strncmpi(buffer, "PWD", 3)) {
 			if (logged) {
 				char cwd[PATH_MAX];
 				getcwd(cwd, sizeof(char) * PATH_MAX);
@@ -74,7 +77,8 @@ start_client_handler(Socket *s, int *status)
 			}
 			else socket_write(s, "530 Please login with USER and PASS\n");
         }
-        else if (strncmpi(buffer, "LIST", 4) == 0) {
+		/******************************* LIST *********************************/
+        else if (!strncmpi(buffer, "LIST", 4)) {
 			if (logged) {
 				char cwd[PATH_MAX];
 				getcwd(cwd, sizeof(cwd));
@@ -84,7 +88,8 @@ start_client_handler(Socket *s, int *status)
 			}
 			else socket_write(s, "530 Please login with USER and PASS\n");
         }
-		else if (strncmpi(buffer, "TYPE ", 5) == 0) {
+		/******************************* TYPE *********************************/
+		else if (!strncmpi(buffer, "TYPE ", 5)) {
 			if (strcmp(buffer + 5, "I") == 0)
 				socket_write(s, "200 Type set to I\n");
 			else if (strcmp(buffer + 5, "A") == 0)
@@ -94,11 +99,17 @@ start_client_handler(Socket *s, int *status)
 				socket_writef(s, "504 TYPE not implemented for %s parameter\n",
 							  buffer + 5);
 		}
-		else if (strncmpi(buffer, "DEBUG", 5) == 0) {
+		/******************************* PASV *********************************/
+		else if (!strncmpi(buffer, "PASV", 4)) {
+			socket_write(s, "PASV"); 
+		}
+		/****************************** DEBUG *********************************/
+		else if (!strncmpi(buffer, "DEBUG", 5)) {
 			socket_writef(s, "User: %s\n", user);
 			socket_writef(s, "Pass: %s\n", pass);
 			socket_writef(s, "Buffer: %s\n", buffer);
 		}
+		/******************************* ETC **********************************/
         else {
             socket_writef(s, "500 %s not understood\n", buffer);
         }
