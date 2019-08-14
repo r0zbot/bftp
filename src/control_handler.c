@@ -8,7 +8,7 @@
 #include <dirent.h>
 #include "../hdr/error.h"
 #include "util.h"
-#include "client_handler.h"
+#include "control_handler.h"
 
 #define BUFFER_SIZE 1024
 #define MAX_PASS_LENGTH 32
@@ -27,13 +27,13 @@ char *buffer,
 Socket *s_copy;
 
 void
-start_client_handler(Socket *s, int *status)
+start_control_handler(Socket *s, int *status)
 {
 	s_copy = s;
 	buffer = emalloc(sizeof(char) * BUFFER_SIZE);
 	user = emalloc(sizeof(char) * MAX_USER_LENGTH);
 	pass = emalloc(sizeof(char) * MAX_PASS_LENGTH);
-	*status = CLIENT;
+	*status = CONTROL;
 	
 	socket_write(s, "220 BFTP - Batista's FTP Server [IP_ADDR]\n"); //TODO: Colocar endereço de IP
 	
@@ -101,7 +101,7 @@ start_client_handler(Socket *s, int *status)
 		}
 		/******************************* PASV *********************************/
 		else if (!strncmpi(buffer, "PASV", 4)) {
-			socket_write(s, "PASV"); 
+			socket_write(s, "PASV");
 		}
 		/****************************** DEBUG *********************************/
 		else if (!strncmpi(buffer, "DEBUG", 5)) {
@@ -169,7 +169,7 @@ start_client_handler(Socket *s, int *status)
 }
 
 void
-stop_client_handler() {
+stop_control_handler() {
 	socket_fin(s_copy);
 	socket_close(s_copy);
 	free(buffer);

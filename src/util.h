@@ -5,7 +5,7 @@
 #define _UTIL_H_
 
 #define CONNECTION	1
-#define CLIENT		2
+#define CONTROL		2
 #define DATA		3
 
 char * concatf(const char* fmt, ...);
