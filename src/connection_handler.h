@@ -1,11 +1,2 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include "../ext/socket.h"
-#include "../hdr/error.h"
-#include "util.h"
-#include "client_handler.h"
-
-void start_connection_handler();
+void start_connection_handler(int *status);
 void stop_connection_handler();

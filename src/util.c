@@ -1,23 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <dirent.h>
+#include "../hdr/error.h"
 
 // Code from https://stackoverflow.com/questions/24442459/returning-formatted-string-from-c-function
-char *
-concatf(const char* fmt, ...)
-{
+char* concatf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char *buf = NULL;
+    char* buf = NULL;
     int n = vsnprintf(NULL, 0, fmt, args);
     va_end(args);
     if (n >= 0) {
         va_start(args, fmt);
-        buf = malloc(n + 1);
-        if (buf) vsnprintf(buf, n + 1, fmt, args);
+        buf = malloc(n+1);
+        if (buf) vsnprintf(buf, n+1, fmt, args);
         va_end(args);
     }
     return buf;
@@ -46,4 +46,49 @@ stripln(char* str, size_t n)
         }
     }
     return 0;
+}
+
+char *
+listdir(const char *path)
+{
+	DIR *dir;
+	struct dirent *ent;
+	unsigned long entries = 0;
+	char* out;
+	if ((dir = opendir (path)) != NULL) {
+		/* count files in directory for string size allocation */
+		while ((ent = readdir (dir)) != NULL) {
+			++entries;
+		}
+		out = malloc(sizeof(char) * entries * FILENAME_MAX);
+		strcpy(out, "XXX Directory contents");
+		/* print all the files and directories within directory */
+		entries = 0;
+		dir = opendir (path);
+		while ((ent = readdir (dir)) != NULL) {
+			strcat(out, "\nXXX ");
+			strcat(out, ent->d_name);
+		}
+		strcat(out, "\n");
+		return (out);
+		closedir (dir);
+	}
+	else {
+		/* could not open directory */
+		return "XXX Could not open directory";
+	}
+}
+
+void *
+emalloc(size_t size) {
+	void *mem = malloc(size);
+	check_null(mem, "emalloc: no more mem!");
+	return mem;
+}
+
+void *
+ecalloc(size_t size) {
+	void *mem = calloc(1, size);
+	check_null(mem, "ecalloc: no more mem!");
+	return mem;
 }

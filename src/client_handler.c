@@ -1,6 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <limits.h>
 #include <dirent.h>
+#include "../hdr/error.h"
+#include "util.h"
 #include "client_handler.h"
 
 #define BUFFER_SIZE 1024
@@ -8,57 +15,33 @@
 #define MAX_USER_LENGTH 32
 
 // Helper for simplified socket writing, freeing the buffer after usage
-char* socket_tmp;
+char *socket_tmp;
 #define socket_writef(x, ...) \
 socket_tmp = concatf(__VA_ARGS__);\
 socket_write(x, socket_tmp);\
 free(socket_tmp)
 
-char*
-listdir(const char* path)
-{
-    DIR *dir;
-    struct dirent *ent;
-    unsigned long entries = 0;
-    char* out;
-    if ((dir = opendir (path)) != NULL) {
-        /*count files in directory for string size allocation*/
-        while ((ent = readdir (dir)) != NULL) {
-            ++entries;
-        }
-        out = malloc(sizeof(char) * entries * FILENAME_MAX);
-        strcpy(out, "XXX Directory contents");
-        /* print all the files and directories within directory */
-        entries = 0;
-        dir = opendir (path);
-        while ((ent = readdir (dir)) != NULL) {
-            strcat(out, "\nXXX ");
-            strcat(out, ent->d_name);
-        }
-        strcat(out, "\n");
-        return (out);
-        closedir (dir);
-    } else {
-        /* could not open directory */
-        return "XXX Could not open directory";
-    }
-}
+char *buffer,
+	 *user,
+	 *pass;
+
+Socket *s_copy;
 
 void
-start_client_handler(Socket *s)
+start_client_handler(Socket *s, int *status)
 {
-	char *buffer = malloc(sizeof(char) * BUFFER_SIZE);
-	char *user = malloc(sizeof(char) * MAX_USER_LENGTH);
-	char *pass = malloc(sizeof(char) * MAX_PASS_LENGTH);
-	check_null(buffer, "client_handler: não foi possível alocar buffer");
-	check_null(user, "client_handler: não foi possível alocar user");
-	check_null(pass, "client_handler: não foi possível alocar pass");
+	s_copy = s;
+	buffer = emalloc(sizeof(char) * BUFFER_SIZE);
+	user = emalloc(sizeof(char) * MAX_USER_LENGTH);
+	pass = emalloc(sizeof(char) * MAX_PASS_LENGTH);
+	*status = CLIENT;
 	
 	socket_write(s, "220 BFTP - Batista's FTP Server [IP_ADDR]\n"); //TODO: Colocar endereço de IP
 	
 	bool logged = false;
 	while (socket_read(s, buffer) > 0) {
 	    stripln(buffer, BUFFER_SIZE); //remove os \r e \n
+		
 		/* input do usuário */
 		if (strncmpi(buffer, "USER", 4) == 0) {
 		    // TODO: consertar quando usuario vazio
@@ -91,16 +74,16 @@ start_client_handler(Socket *s)
         else if (strncmpi(buffer, "PWD", 3) == 0) {
             char cwd[PATH_MAX];
             getcwd(cwd, sizeof(cwd));
-            fsocket_write(s, "257 \"%s\" is the current directory\n", cwd);
+            socket_writef(s, "257 \"%s\" is the current directory\n", cwd);
         }
         else if (strncmpi(buffer, "LIST", 4) == 0) {
             char cwd[PATH_MAX];
             getcwd(cwd, sizeof(cwd));
-            char* list = listdir(cwd);
+            char *list = listdir(cwd);
             socket_write(s, list);
             free(list);
         }
-        else{
+        else {
             socket_writef(s, "500 %s not understood\n", buffer);
         }
 
@@ -156,7 +139,13 @@ start_client_handler(Socket *s)
 	        350 Restarting at 0. Send STORE or RETRIEVE to initiate transfer
 	        421 No transfer timeout (600 seconds): closing control connection
 	 */
+}
+
+void
+stop_client_handler() {
+	socket_fin(s_copy);
+	socket_close(s_copy);
+	free(buffer);
 	free(user);
 	free(pass);
-	exit(0);
 }
