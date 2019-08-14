@@ -1,3 +1,6 @@
+#include <unistd.h>
+#include <limits.h>
+#include <dirent.h>
 #include "client_handler.h"
 
 #define BUFFER_SIZE 1024
@@ -10,6 +13,36 @@ char* socket_tmp;
 socket_tmp = concatf(__VA_ARGS__);\
 socket_write(x, socket_tmp);\
 free(socket_tmp)
+
+char*
+listdir(const char* path)
+{
+    DIR *dir;
+    struct dirent *ent;
+    unsigned long entries = 0;
+    char* out;
+    if ((dir = opendir (path)) != NULL) {
+        /*count files in directory for string size allocation*/
+        while ((ent = readdir (dir)) != NULL) {
+            ++entries;
+        }
+        out = malloc(sizeof(char) * entries * FILENAME_MAX);
+        strcpy(out, "XXX Directory contents");
+        /* print all the files and directories within directory */
+        entries = 0;
+        dir = opendir (path);
+        while ((ent = readdir (dir)) != NULL) {
+            strcat(out, "\nXXX ");
+            strcat(out, ent->d_name);
+        }
+        strcat(out, "\n");
+        return (out);
+        closedir (dir);
+    } else {
+        /* could not open directory */
+        return "XXX Could not open directory";
+    }
+}
 
 void
 start_client_handler(Socket *s)
@@ -55,14 +88,26 @@ start_client_handler(Socket *s)
             socket_writef(s, "Pass: %s\n", pass);
             socket_writef(s, "Buffer: %s\n", buffer);
         }
+        else if (strncmpi(buffer, "PWD", 3) == 0) {
+            char cwd[PATH_MAX];
+            getcwd(cwd, sizeof(cwd));
+            fsocket_write(s, "257 \"%s\" is the current directory\n", cwd);
+        }
+        else if (strncmpi(buffer, "LIST", 4) == 0) {
+            char cwd[PATH_MAX];
+            getcwd(cwd, sizeof(cwd));
+            char* list = listdir(cwd);
+            socket_write(s, list);
+            free(list);
+        }
         else{
             socket_writef(s, "500 %s not understood\n", buffer);
         }
-		
+
 		/* estado do login */
 		if (strlen(user) && strlen(pass)) logged = true;
 		else logged = false;
-		
+
 	}
 	/* TODO - Missing commands:
 	    USER r0zbot

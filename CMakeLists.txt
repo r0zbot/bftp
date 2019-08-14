@@ -7,8 +7,8 @@ set(SOURCE_FILES
         ext/socket.c
         ext/socket.h
         hdr/error.h
-        hdr/util.h
-        hdr/util.c
+        src/util.h
+        src/util.c
         src/bftp.c
         src/client_handler.c
         src/client_handler.h

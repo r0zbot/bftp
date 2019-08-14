@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <dirent.h>
 
 // Code from https://stackoverflow.com/questions/24442459/returning-formatted-string-from-c-function
 char *
