@@ -9,6 +9,7 @@
 #include "../hdr/error.h"
 #include "util.h"
 #include "control_handler.h"
+#include "data_handler.h"
 
 #define BUFFER_SIZE 1024
 #define MAX_PASS_LENGTH 32
@@ -66,7 +67,8 @@ start_control_handler(Socket *s, int *status)
 		/******************************* QUIT *********************************/
 		else if (!strncmpi(buffer, "QUIT", 4)) {
 			socket_write(s, "221 Goodbye.\n");
-			socket_fin(s);
+//			stop_data_handler();
+			stop_control_handler();
 		}
 		/******************************** PWD *********************************/
         else if (!strncmpi(buffer, "PWD", 3)) {
@@ -101,7 +103,13 @@ start_control_handler(Socket *s, int *status)
 		}
 		/******************************* PASV *********************************/
 		else if (!strncmpi(buffer, "PASV", 4)) {
-			socket_write(s, "PASV");
+			// TODO: impedir PASV repetidos
+			if (logged) {
+				int n = rand() % 24 + 1024;
+				Socket *ds = socket_open(n);
+				socket_writef(s, "227 Entering Passive Mode (172,31,29,193,4,21)\n");
+				if (!fork()) start_data_handler(ds, status);
+			}
 		}
 		/****************************** DEBUG *********************************/
 		else if (!strncmpi(buffer, "DEBUG", 5)) {
@@ -175,4 +183,5 @@ stop_control_handler() {
 	free(buffer);
 	free(user);
 	free(pass);
+	exit(0);
 }
