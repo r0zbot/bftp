@@ -18,8 +18,7 @@
 char *socket_tmp;
 #define socket_writef(x, ...) \
 socket_tmp = concatf(__VA_ARGS__);\
-socket_write(x, socket_tmp);\
-free(socket_tmp)
+socket_write(x, socket_tmp);
 
 char *buffer,
 	 *user,
@@ -48,6 +47,7 @@ start_client_handler(Socket *s, int *status)
 			// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
 			// TODO: o que acontece se um usuário já logado tenta rodar USER?
 			// TODO: tirar \n das responses?
+			// TODO: anon login?: 331 Anonymous login ok, send your complete email address as your password
 			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			socket_writef(s, "331 Password required for %s\n", user);
@@ -62,25 +62,17 @@ start_client_handler(Socket *s, int *status)
 				socket_writef(s, "230 User %s logged in\n", user);
 			}
 		}
-		// TODO: todos outros comandos possíveis
 		else if (strncmpi(buffer, "QUIT", 4) == 0) {
 			socket_write(s, "221 Goodbye.\n");
 			socket_fin(s);
 		}
-        else if (strncmpi(buffer, "DEBUG", 5) == 0) {
-            socket_writef(s, "User: %s\n", user);
-            socket_writef(s, "Pass: %s\n", pass);
-            socket_writef(s, "Buffer: %s\n", buffer);
-        }
         else if (strncmpi(buffer, "PWD", 3) == 0) {
 			if (logged) {
 				char cwd[PATH_MAX];
 				getcwd(cwd, sizeof(char) * PATH_MAX);
 				socket_writef(s, "257 \"%s\" is the current directory\n", cwd);
 			}
-			else {
-				; //TODO: o que responder qd nao houver credenciais validas?
-			}
+			else socket_write(s, "530 Please login with USER and PASS\n");
         }
         else if (strncmpi(buffer, "LIST", 4) == 0) {
 			if (logged) {
@@ -90,10 +82,23 @@ start_client_handler(Socket *s, int *status)
 				socket_write(s, list);
 				free(list);
 			}
-			else {
-				; //TODO: o que responder qd nao houver credenciais validas?
-			}
+			else socket_write(s, "530 Please login with USER and PASS\n");
         }
+		else if (strncmpi(buffer, "TYPE ", 5) == 0) {
+			if (strcmp(buffer + 5, "I") == 0)
+				socket_write(s, "200 Type set to I\n");
+			else if (strcmp(buffer + 5, "A") == 0)
+				socket_write(s, "200 Type set to A\n");
+			// TODO: setar alguma variável do type?
+			else
+				socket_writef(s, "504 TYPE not implemented for %s parameter\n",
+							  buffer + 5);
+		}
+		else if (strncmpi(buffer, "DEBUG", 5) == 0) {
+			socket_writef(s, "User: %s\n", user);
+			socket_writef(s, "Pass: %s\n", pass);
+			socket_writef(s, "Buffer: %s\n", buffer);
+		}
         else {
             socket_writef(s, "500 %s not understood\n", buffer);
         }

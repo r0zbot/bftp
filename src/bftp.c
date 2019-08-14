@@ -14,6 +14,7 @@ void sigint_handler()
 {
 	if (*status == CONNECTION) stop_connection_handler();
 	else if (*status == CLIENT) stop_client_handler();
+	free(status);
 }
 
 /**
