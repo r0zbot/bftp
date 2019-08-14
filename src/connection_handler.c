@@ -1,19 +1,23 @@
 #include "connection_handler.h"
 
 Socket *s;
+bool is_client;
+bool sigint_not_sent;
+
 /**
  * start_connection_handler()
  */
 void
 start_connection_handler()
 {
+	sigint_not_sent = true;
 	s = socket_open(213);
 	check_null(s, "connection_handler: não foi possível criar a socket\n");
 	
 	printf("bftp escutando na porta %d...\n", socket_port(s));
 	
-	while (true) {
-		if (socket_listen(s) < 0) break;
+	while (sigint_not_sent) {
+		socket_listen(s);
 		if (!fork()) start_client_handler(s);
 	}
 	puts("");
