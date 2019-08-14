@@ -1,7 +1,9 @@
 #include <signal.h>
 #include "connection_handler.h"
 
-/* Signal Handler for SIGINT */
+/**
+ * sigint_handler()
+ */
 void sigint_handler()
 {
 	stop_connection_handler();

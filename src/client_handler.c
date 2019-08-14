@@ -1,34 +1,48 @@
 #include "client_handler.h"
+
 #define BUFFER_SIZE 1024
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
+
+// Helper for simplified socket writing, freeing the buffer after usage
+char* socket_tmp;
+#define socket_writef(x, ...) \
+socket_tmp = concatf(__VA_ARGS__);\
+socket_write(x, socket_tmp);\
+free(socket_tmp)
 
 void
 start_client_handler(Socket *s)
 {
 	char *buffer = malloc(sizeof(char) * BUFFER_SIZE);
-	check_null(buffer, "client_handler: não foi possível alocar buffer");
-	socket_write(s, "220 BFTP - Batista's FTP Server [IP_ADDR]\n"); //TODO: Colocar endereço de IP
-	
 	char *user = malloc(sizeof(char) * MAX_USER_LENGTH);
 	char *pass = malloc(sizeof(char) * MAX_PASS_LENGTH);
-	bool logged = false;
+	check_null(buffer, "client_handler: não foi possível alocar buffer");
+	check_null(user, "client_handler: não foi possível alocar user");
+	check_null(pass, "client_handler: não foi possível alocar pass");
 	
+	socket_write(s, "220 BFTP - Batista's FTP Server [IP_ADDR]\n"); //TODO: Colocar endereço de IP
+	
+	bool logged = false;
 	while (socket_read(s, buffer) > 0) {
 	    stripln(buffer, BUFFER_SIZE); //remove os \r e \n
 		/* input do usuário */
 		if (strncmpi(buffer, "USER", 4) == 0) {
 		    // TODO: consertar quando usuario vazio
+			// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
+			// TODO: o que acontece se um usuário já logado tenta rodar USER?
 			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
-			fsocket_write(s, "331 Password required for %s\n", user);
+			socket_writef(s, "331 Password required for %s\n", user);
 		}
 		else if (strncmpi(buffer, "PASS", 4) == 0) {
-			if (!strlen(user)) socket_write(s, "503 Login with USER first\n");
-			else if (strncmp(buffer+5, "teste123", MAX_PASS_LENGTH) != 0) socket_write(s, "530 Login incorrect.\n");
+			if (!strlen(user))
+				socket_write(s, "503 Login with USER first\n");
+			else if (strncmp(buffer + 5, "teste123", MAX_PASS_LENGTH))
+				socket_write(s, "530 Login incorrect.\n");
 			else {
 				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
-				fsocket_write(s, "230 User %s logged in\n", user); // TODO: descobrir pq da pau aqui
+				socket_writef(s, "230 User %s logged in\n", user);
 			}
 		}
 		// TODO: todos outros comandos possíveis
@@ -37,12 +51,12 @@ start_client_handler(Socket *s)
 			socket_fin(s);
 		}
         else if (strncmpi(buffer, "DEBUG", 5) == 0) {
-            fsocket_write(s, "User: %s\n", user);
-            fsocket_write(s, "Pass: %s\n", pass);
-            fsocket_write(s, "Buffer: %s\n", buffer);
+            socket_writef(s, "User: %s\n", user);
+            socket_writef(s, "Pass: %s\n", pass);
+            socket_writef(s, "Buffer: %s\n", buffer);
         }
         else{
-            fsocket_write(s, "500 %s not understood\n", buffer);
+            socket_writef(s, "500 %s not understood\n", buffer);
         }
 		
 		/* estado do login */
