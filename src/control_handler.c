@@ -93,11 +93,16 @@ start_control_handler(Socket *s_arg, int *status)
         }
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
-            char *list = listdir(cwd);
-            socket_write(s, list);
-			// TODO: MLSD
-			// TODO: escrever na data connection;
-            free(list);
+			if (data_s) {
+				if (!fork()) {
+					char *list = listdir(cwd);
+					start_data_handler(data_s, status, list);
+					// TODO: (child) transmitir transfer complete/error e quit
+					free(list);
+					break;
+				}
+			}
+			//TODO: o que responder com LIST antes de PASV?
         }
 		/******************************* TYPE *********************************/
 		else if (checkcmd("TYPE")) {
@@ -188,8 +193,6 @@ void
 stop_control_handler() {
 	socket_fin(s);
 	socket_close(s);
-	socket_fin(data_s);
-	socket_close(data_s);
 	free(buffer);
 	free(user);
 	free(pass);
