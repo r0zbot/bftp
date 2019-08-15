@@ -14,6 +14,7 @@
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
 
+// TODO: socket_writef (créditos Daniel Martinez)
 
 typedef struct Socket Socket;
 
@@ -82,14 +83,6 @@ X8, X7, X6, X5, X4, X3, X2, X1, N, ...)   N
 
 #define socket_write(...) \
         socket_write(NUM_ARGS(__VA_ARGS__), __VA_ARGS__)
-
-// Helper for formatted simplified socket writing, freeing the buffer after usage
-char* fsocket_tmpstr;
-#define fsocket_write(x, ...) \
-    fsocket_tmpstr = concatf(__VA_ARGS__);\
-    socket_write(x,fsocket_tmpstr);\
-    free(fsocket_tmpstr)
-
 
 #endif /* _SOCKET_H_ */
 

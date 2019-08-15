@@ -1,10 +1,23 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include "connection_handler.h"
+#include "control_handler.h"
+#include "data_handler.h"
+#include "util.h"
 
-/* Signal Handler for SIGINT */
+int *status;
+
+/**
+ * sigint_handler()
+ */
 void sigint_handler()
 {
-	stop_connection_handler();
+	if (*status == CONNECTION) stop_connection_handler();
+	else if (*status == CONTROL) stop_control_handler();
+	else if (*status == DATA) stop_data_handler();
+	free(status);
 }
 
 /**
@@ -13,7 +26,12 @@ void sigint_handler()
 int
 main()
 {
+	status = ecalloc(sizeof(int));
+	
 	signal(SIGINT, sigint_handler);
-	start_connection_handler();
+	srand(time(0));
+	
+	start_connection_handler(status);
+	
 	return 0;
 }

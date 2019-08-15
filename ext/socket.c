@@ -108,7 +108,8 @@ socket_listen(Socket *s)
     if (s -> type == SOCK_STREAM || s -> type == SOCK_SEQPACKET) {
         unsigned int len = sizeof(s -> cliaddr);
         if ((s -> connfd = accept(s -> sockfd, (struct sockaddr *) &s -> cliaddr, &len)) == -1) {
-            fprintf(stderr, "socket_read: cannot accept on new socket\n");
+//            fprintf(stderr, "socket_listen: cannot accept on new socket\n");
+			// TODO: fazer direito
             return -1;
         }
         else return s -> connfd;

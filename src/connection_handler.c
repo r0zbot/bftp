@@ -1,20 +1,29 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include "../ext/socket.h"
+#include "../hdr/error.h"
+#include "util.h"
+#include "control_handler.h"
 #include "connection_handler.h"
 
-bool sigint_sent = false;
 Socket *s;
+
 /**
  * start_connection_handler()
  */
 void
-start_connection_handler()
+start_connection_handler(int *status)
 {
-	s = socket_open(2129);
-	check_null(listen, "connection_handler: não foi possível criar a socket");
+	*status = CONNECTION;
+	s = socket_open(21);
+	
 	printf("bftp escutando na porta %d...\n", socket_port(s));
 	
-	while (!sigint_sent) {
-		socket_listen(s);
-		if (!fork()) start_client_handler(s);
+	while (true) {
+		if (socket_listen(s) < 0) break;
+		if (!fork()) start_control_handler(s, status);
 	}
 }
 
@@ -24,8 +33,5 @@ start_connection_handler()
 void
 stop_connection_handler()
 {
-	sigint_sent = true;
-	//TODO: kill todas as childs
 	socket_close(s);
 }
-

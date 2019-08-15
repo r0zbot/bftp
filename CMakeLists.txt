@@ -10,9 +10,11 @@ set(SOURCE_FILES
         src/util.h
         src/util.c
         src/bftp.c
-        src/client_handler.c
-        src/client_handler.h
         src/connection_handler.c
-        src/connection_handler.h)
+        src/connection_handler.h
+        src/control_handler.c
+        src/control_handler.h
+        src/data_handler.c
+        src/data_handler.h)
 
 add_executable(bftp ${SOURCE_FILES})
