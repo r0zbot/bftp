@@ -14,10 +14,10 @@ Socket *s;
  * start_connection_handler()
  */
 void
-start_connection_handler(int *status)
+start_connection_handler(int *status, int port)
 {
 	*status = CONNECTION;
-	s = socket_open(21);
+	s = socket_open(port);
 	
 	printf("bftp escutando na porta %d...\n", socket_port(s));
 	

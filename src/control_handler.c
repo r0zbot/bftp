@@ -6,10 +6,12 @@
 #include <unistd.h>
 #include <limits.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include "../hdr/error.h"
 #include "util.h"
 #include "control_handler.h"
 #include "data_handler.h"
+#include <ifaddrs.h>
 
 #define BUFFER_SIZE 1024
 #define MAX_PASS_LENGTH 32
@@ -23,27 +25,28 @@ socket_write(x, socket_tmp);
 
 // Helper for simplified command checking with authentication
 #define checkcmd(str) (strncmpi(buffer, str, strlen(str)) == 0)
-#define authcheckcmd(str) (checkcmd(str) && (denied = true) && logged) //yes, its an assignment
+#define authcheckcmd(str) (checkcmd(str) && (denied = true) && logged) // yes, its an assignment
 
 char *buffer,
 	 *user,
 	 *pass;
 
-Socket *s_copy;
+Socket *s;
+Socket *data_s;
 
 void
-start_control_handler(Socket *s, int *status)
+start_control_handler(Socket *s_arg, int *status)
 {
-	s_copy = s;
+	s = s_arg;
 	buffer = emalloc(sizeof(char) * BUFFER_SIZE);
 	user = emalloc(sizeof(char) * MAX_USER_LENGTH);
 	pass = emalloc(sizeof(char) * MAX_PASS_LENGTH);
 	*status = CONTROL;
 	
-	socket_write(s, "220 BFTP - Batista's FTP Server [IP_ADDR]\n"); //TODO: Colocar endereço de IP
+	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\n", socket_ip(s));
 	
 	bool logged = false;
-	bool denied = false; //Set to true when user is denied access to a command
+	bool denied = false; // Set to true when user is denied access to a command
 	while (socket_read(s, buffer) > 0) {
 	    stripln(buffer, BUFFER_SIZE); //remove os \r e \n
 		// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
@@ -85,6 +88,9 @@ start_control_handler(Socket *s, int *status)
         else if (authcheckcmd("LIST")) {
             char cwd[PATH_MAX];
             getcwd(cwd, sizeof(cwd));
+			strcat(cwd, "/ftp/");
+		    strcat(cwd, user);
+			mkdir(cwd, 0777);
             char *list = listdir(cwd);
             socket_write(s, list);
             free(list);
@@ -102,11 +108,10 @@ start_control_handler(Socket *s, int *status)
 		}
 		/******************************* PASV *********************************/
 		else if (authcheckcmd("PASV")) {
-			// TODO: impedir PASV repetidos
-            int n = rand() % 24 + 1024;
-            Socket *ds = socket_open(n);
+			// TODO: impedir PASV repetidos?
+            data_s = socket_open(0);
             socket_writef(s, "227 Entering Passive Mode (172,31,29,193,4,21)\n"); //TODO: Colocar actual ip
-            if (!fork()) start_data_handler(ds, status);
+			printf("IP %s\n", socket_ip(s));
 		}
 		/****************************** DEBUG *********************************/
 		else if (checkcmd("DEBUG")) {
@@ -116,19 +121,14 @@ start_control_handler(Socket *s, int *status)
 		}
 		/******************************* ETC **********************************/
         else {
-            if(denied){
-                socket_write(s, "530 Please login with USER and PASS\n");
-                denied = false;
-            }
-            else{
-                socket_writef(s, "500 %s not understood\n", buffer);
-            }
+            if (denied) socket_write(s, "530 Please login with USER and PASS\n");
+            else socket_writef(s, "500 %s not understood\n", buffer);
         }
 
 		/* estado do login */
 		if (strlen(user) && strlen(pass)) logged = true;
 		else logged = false;
-
+		denied = false;
 	}
 	/* TODO - Missing commands:
 	    USER r0zbot
@@ -181,8 +181,8 @@ start_control_handler(Socket *s, int *status)
 
 void
 stop_control_handler() {
-	socket_fin(s_copy);
-	socket_close(s_copy);
+	socket_fin(s);
+	socket_close(s);
 	free(buffer);
 	free(user);
 	free(pass);

@@ -18,13 +18,6 @@
 
 typedef struct Socket Socket;
 
-/* Data structure that holds all the required info */
-struct Socket {
-    int sockfd, connfd;
-    struct sockaddr_in servaddr, cliaddr;
-    int type, protocol;
-};
-
 /*******************************************************************************
  * 								    API										   *
  ******************************************************************************/
@@ -54,6 +47,9 @@ socket_port(Socket *s);
 
 void
 socket_fin(Socket *s);
+
+char *
+socket_ip(Socket *s);
 
 /* These macros will prepend the number of args before function calls */
 

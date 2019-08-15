@@ -24,14 +24,16 @@ void sigint_handler()
  * main()
  */
 int
-main()
+main(int argc, char **argv)
 {
 	status = ecalloc(sizeof(int));
 	
 	signal(SIGINT, sigint_handler);
 	srand(time(0));
 	
-	start_connection_handler(status);
+	int port = 21;
+	if (argc > 1) port = atoi(argv[1]);
+	start_connection_handler(status, port);
 	
 	return 0;
 }

@@ -21,6 +21,12 @@
     #define MALLOC_SIZE(x) malloc_usable_size(x)
 #endif
 
+struct Socket {
+	int sockfd, connfd;
+	struct sockaddr_in servaddr, cliaddr;
+	int type, protocol;
+};
+
 /**
  * socket_open(): opens a port and returns its Socket pointer
  * @port: # of the port we wish to open
@@ -275,6 +281,15 @@ socket_write(int vargc, ...)
 	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
 	/* client -> server */
     else return send(s -> sockfd, buffer, buffersize, flags);
+}
+/**
+ * socket_ip(): returns ip address in printable format
+ * @s: socket which will be read
+ */
+char *
+socket_ip(Socket *s)
+{
+	return inet_ntoa(s -> cliaddr.sin_addr);
 }
 
 /**
