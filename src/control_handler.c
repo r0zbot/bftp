@@ -43,6 +43,10 @@ start_control_handler(Socket *s_arg, int *status)
 	pass = emalloc(sizeof(char) * MAX_PASS_LENGTH);
 	*status = CONTROL;
 	
+	char cwd[PATH_MAX];
+	getcwd(cwd, sizeof(char) * PATH_MAX);
+	strcat(cwd, "/ftp/");
+	
 	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\n", socket_ip(s));
 	
 	bool logged = false;
@@ -57,9 +61,14 @@ start_control_handler(Socket *s_arg, int *status)
 		// TODO: o que acontece se um usuário já logado tenta rodar USER?
 		// TODO: anon login?: 331 Anonymous login ok, send your complete email address as your password
 		if (checkcmd("USER")) {
+			if (strlen(user)) cwd[strlen(cwd) - strlen(user)] = '\0';
+			
 			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			socket_writef(s, "331 Password required for %s\n", user);
+			
+			strcat(cwd, user);
+			mkdir(cwd, 0777);
 		}
 		/******************************* PASS *********************************/
 		else if (checkcmd("PASS")) {
@@ -80,19 +89,14 @@ start_control_handler(Socket *s_arg, int *status)
 		}
 		/******************************** PWD *********************************/
         else if (authcheckcmd("PWD")) {
-            char cwd[PATH_MAX];
-            getcwd(cwd, sizeof(char) * PATH_MAX);
             socket_writef(s, "257 \"%s\" is the current directory\n", cwd);
         }
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
-            char cwd[PATH_MAX];
-            getcwd(cwd, sizeof(cwd));
-			strcat(cwd, "/ftp/");
-		    strcat(cwd, user);
-			mkdir(cwd, 0777);
             char *list = listdir(cwd);
             socket_write(s, list);
+			// TODO: MLSD
+			// TODO: escrever na data connection;
             free(list);
         }
 		/******************************* TYPE *********************************/
