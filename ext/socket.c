@@ -93,8 +93,8 @@ socket_open(int vargc, ...)
         }
     }
     
-    /* prints out random port */
-    if (port == 0) printf("listening at port %d...\n", socket_port(s));
+//    /* prints out random port */
+//    if (port == 0) printf("listening at port %d...\n", socket_port(s));
     
     return s;
 }

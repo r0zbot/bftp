@@ -92,3 +92,12 @@ ecalloc(size_t size) {
 	check_null(mem, "ecalloc: no more mem!");
 	return mem;
 }
+
+char *
+pasv(char *ip)
+{
+	char *str = strdup(ip);
+	char *begin = str;
+	while (*str++ != '\0') if (*str == '.') *str = ',';
+	return begin;
+}

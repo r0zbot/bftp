@@ -20,4 +20,6 @@ void * emalloc(size_t size);
 
 void * ecalloc(size_t size);
 
+char * pasv(char *ip);
+
 #endif /* _UTIL_H_ */

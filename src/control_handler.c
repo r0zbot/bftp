@@ -65,7 +65,7 @@ start_control_handler(Socket *s_arg, int *status)
 		else if (checkcmd("PASS")) {
 			if (!strlen(user))
 				socket_write(s, "503 Login with USER first\n");
-			else if (strncmp(buffer + 5, "teste123", MAX_PASS_LENGTH))
+			else if (strncmp(buffer + 5, "ftp", MAX_PASS_LENGTH))
 				socket_write(s, "530 Login incorrect.\n");
 			else {
 				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
@@ -108,10 +108,11 @@ start_control_handler(Socket *s_arg, int *status)
 		}
 		/******************************* PASV *********************************/
 		else if (authcheckcmd("PASV")) {
-			// TODO: impedir PASV repetidos?
             data_s = socket_open(0);
-            socket_writef(s, "227 Entering Passive Mode (172,31,29,193,4,21)\n"); //TODO: Colocar actual ip
-			printf("IP %s\n", socket_ip(s));
+            socket_writef(s, "227 Entering Passive Mode (%s,%d,%d)\n",
+						  pasv(socket_ip(s)),
+						  socket_port(data_s) / 256,
+						  socket_port(data_s) % 256);
 		}
 		/****************************** DEBUG *********************************/
 		else if (checkcmd("DEBUG")) {
@@ -183,6 +184,8 @@ void
 stop_control_handler() {
 	socket_fin(s);
 	socket_close(s);
+	socket_fin(data_s);
+	socket_close(data_s);
 	free(buffer);
 	free(user);
 	free(pass);
