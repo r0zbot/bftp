@@ -6,6 +6,9 @@
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
 
+#define checkcmd(str) (strncmpi(buffer, str, strlen(str)) == 0)
+#define authcheckcmd(str) (checkcmd(str) && (denied = true) && logged) //yes, its an assignment
+
 char*
 listdir(const char* path){
     DIR *dir;
@@ -42,21 +45,22 @@ start_client_handler(Socket *s)
 	char *buffer = malloc(sizeof(char) * BUFFER_SIZE);
 	check_null(buffer, "client_handler: não foi possível alocar buffer");
 	socket_write(s, "220 BFTP - Batista's FTP Server [IP_ADDR]\n"); //TODO: Colocar endereço de IP
-	
+
 	char *user = malloc(sizeof(char) * MAX_USER_LENGTH);
 	char *pass = malloc(sizeof(char) * MAX_PASS_LENGTH);
 	bool logged = false;
-	
+    bool denied = false;
+
 	while (socket_read(s, buffer) > 0) {
 	    stripln(buffer, BUFFER_SIZE); //remove os \r e \n
 		/* input do usuário */
-		if (strncmpi(buffer, "USER", 4) == 0) {
+		if (checkcmd("USER")) {
 		    // TODO: consertar quando usuario vazio
 			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			fsocket_write(s, "331 Password required for %s\n", user);
 		}
-		else if (strncmpi(buffer, "PASS", 4) == 0) {
+		else if (checkcmd("PASS")) {
 			if (!strlen(user)) socket_write(s, "503 Login with USER first\n");
 			else if (strncmp(buffer+5, "teste123", MAX_PASS_LENGTH) != 0) socket_write(s, "530 Login incorrect.\n");
 			else {
@@ -65,21 +69,21 @@ start_client_handler(Socket *s)
 			}
 		}
 		// TODO: todos outros comandos possíveis
-		else if (strncmpi(buffer, "QUIT", 4) == 0) {
+		else if (checkcmd("QUIT")) {
 			socket_write(s, "221 Goodbye.\n");
 			socket_fin(s);
 		}
-        else if (strncmpi(buffer, "DEBUG", 5) == 0) {
+        else if (checkcmd("DEBUG")) {
             fsocket_write(s, "User: %s\n", user);
             fsocket_write(s, "Pass: %s\n", pass);
             fsocket_write(s, "Buffer: %s\n", buffer);
         }
-        else if (strncmpi(buffer, "PWD", 3) == 0) {
+        else if (authcheckcmd("PWD")) {
             char cwd[PATH_MAX];
             getcwd(cwd, sizeof(cwd));
             fsocket_write(s, "257 \"%s\" is the current directory\n", cwd);
         }
-        else if (strncmpi(buffer, "LIST", 4) == 0) {
+        else if (authcheckcmd("LIST")) {
             char cwd[PATH_MAX];
             getcwd(cwd, sizeof(cwd));
             char* list = listdir(cwd);
@@ -87,7 +91,13 @@ start_client_handler(Socket *s)
             free(list);
         }
         else{
-            fsocket_write(s, "500 %s not understood\n", buffer);
+            if(denied){
+                socket_write(s, "530 Please login with USER and PASS\n");
+                denied = false;
+            }
+            else{
+                fsocket_write(s, "500 %s not understood\n", buffer);
+            }
         }
 
 		/* estado do login */
