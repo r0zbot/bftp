@@ -75,7 +75,7 @@ listdir(const char *path)
 	}
 	else {
 		/* could not open directory */
-		return "XXX Could not open directory";
+		return "XXX Could not open directory\n";
 	}
 }
 
