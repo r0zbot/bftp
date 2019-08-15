@@ -56,7 +56,7 @@ listdir(const char *path)
 	DIR *dir;
 	struct dirent *ent;
 	unsigned long entries = 0;
-	char* out;
+	char *out;
 	if ((dir = opendir (path)) != NULL) {
 		/* count files in directory for string size allocation */
 		while ((ent = readdir (dir)) != NULL) {

@@ -94,10 +94,28 @@ start_control_handler(Socket *s_arg, int *status)
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
 			if (data_s) {
+				socket_write(s, "150 Opening ASCII mode data connection for file list\n");
+				// TODO: deixar bunitin e prever casos de erro
 				if (!fork()) {
-					char *list = listdir(cwd);
+					FILE *fp;
+					char command[PATH_MAX];
+					char entry[PATH_MAX];
+					char list[PATH_MAX];
+					bzero(&command, PATH_MAX);
+					bzero(&entry, PATH_MAX);
+					bzero(&list, PATH_MAX);
+					strcat(command, "/bin/ls -ld \"");
+					strcat(command, cwd);
+					strcat(command, "\" .*");
+					fp = popen(command, "r");
+					if (fp == NULL) exit("Failed to run command\n");
+					
+					while (fgets(entry, sizeof(entry) - 1, fp) != NULL)
+						strcat(list, entry);
+					
+					pclose(fp);
 					start_data_handler(data_s, status, list);
-					// TODO: (child) transmitir transfer complete/error e quit
+					socket_write(s, "226 Transfer complete\n");
 					break;
 				}
 			}
@@ -135,6 +153,20 @@ start_control_handler(Socket *s_arg, int *status)
 						  socket_port(data_s) / 256,
 						  socket_port(data_s) % 256);
 		}
+		/******************************* PORT *********************************/
+		else if (authcheckcmd("PORT")) {
+			socket_write(s, "501 Server cannot accept argument.\n");
+		}
+		else if (authcheckcmd("SYST")) {
+			socket_write(s, "215 UNIX Type: L8.\n");
+		}
+		else if (authcheckcmd("FEAT")) {
+			socket_write(s, "211 Features:\n");
+			socket_write(s, "   UTF8\n");
+		}
+		else if (authcheckcmd("OPTS UTF8 ON")) {
+			socket_write(s, "200 UTF8 set to on\n");
+		}
 		/****************************** DEBUG *********************************/
 		else if (checkcmd("DEBUG")) {
 			socket_writef(s, "User: %s\n", user);
@@ -151,6 +183,7 @@ start_control_handler(Socket *s_arg, int *status)
 		if (strlen(user) && strlen(pass)) logged = true;
 		else logged = false;
 		denied = false;
+		
 	}
 	/* TODO - Missing commands:
 	    USER r0zbot
