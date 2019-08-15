@@ -7,11 +7,11 @@
 #include <limits.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <ifaddrs.h>
 #include "../hdr/error.h"
 #include "util.h"
 #include "control_handler.h"
 #include "data_handler.h"
-#include <ifaddrs.h>
 
 #define BUFFER_SIZE 1024
 #define MAX_PASS_LENGTH 32
@@ -68,7 +68,6 @@ start_control_handler(Socket *s_arg, int *status)
 			socket_writef(s, "331 Password required for %s\n", user);
 			
 			strcat(cwd, user);
-			mkdir(cwd, 0777);
 		}
 		/******************************* PASS *********************************/
 		else if (checkcmd("PASS")) {
@@ -79,6 +78,7 @@ start_control_handler(Socket *s_arg, int *status)
 			else {
 				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
 				socket_writef(s, "230 User %s logged in\n", user);
+				_mkdir(cwd);
 			}
 		}
 		/******************************* QUIT *********************************/

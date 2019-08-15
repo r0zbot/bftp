@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <limits.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include "../hdr/error.h"
 
 // Code from https://stackoverflow.com/questions/24442459/returning-formatted-string-from-c-function
@@ -100,4 +102,23 @@ pasv(char *ip)
 	char *begin = str;
 	while (*str++ != '\0') if (*str == '.') *str = ',';
 	return begin;
+}
+
+void
+_mkdir(const char *dir) {
+	char tmp[PATH_MAX];
+	char *p = NULL;
+	size_t len;
+	
+	snprintf(tmp, sizeof(tmp),"%s",dir);
+	len = strlen(tmp);
+	if(tmp[len - 1] == '/')
+		tmp[len - 1] = 0;
+	for(p = tmp + 1; *p; p++)
+		if(*p == '/') {
+			*p = 0;
+			mkdir(tmp, S_IRWXU);
+			*p = '/';
+		}
+	mkdir(tmp, S_IRWXU);
 }
