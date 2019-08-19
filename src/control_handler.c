@@ -6,11 +6,11 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <ifaddrs.h>
 #include "../hdr/error.h"
 #include "util.h"
 #include "control_handler.h"
 #include "data_handler.h"
-#include <ifaddrs.h>
 
 #ifdef __linux__ 
         #include <linux/limits.h>
@@ -73,7 +73,6 @@ start_control_handler(Socket *s_arg, int *status)
 			socket_writef(s, "331 Password required for %s\n", user);
 			
 			strcat(cwd, user);
-			mkdir(cwd, 0777);
 		}
 		/******************************* PASS *********************************/
 		else if (checkcmd("PASS")) {
@@ -84,6 +83,7 @@ start_control_handler(Socket *s_arg, int *status)
 			else {
 				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
 				socket_writef(s, "230 User %s logged in\n", user);
+				_mkdir(cwd);
 			}
 		}
 		/******************************* QUIT *********************************/
@@ -99,6 +99,36 @@ start_control_handler(Socket *s_arg, int *status)
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
 			if (data_s) {
+				socket_write(s, "150 Opening ASCII mode data connection for file list\n");
+				// TODO: deixar bunitin e prever casos de erro
+				if (!fork()) {
+					FILE *fp;
+					char command[PATH_MAX];
+					char entry[PATH_MAX];
+					char list[PATH_MAX];
+					bzero(&command, PATH_MAX);
+					bzero(&entry, PATH_MAX);
+					bzero(&list, PATH_MAX);
+					strcat(command, "/bin/ls -ld \"");
+					strcat(command, cwd);
+					strcat(command, "\" .*");
+					fp = popen(command, "r");
+					if (fp == NULL) exit("Failed to run command\n");
+					
+					while (fgets(entry, sizeof(entry) - 1, fp) != NULL)
+						strcat(list, entry);
+					
+					pclose(fp);
+					start_data_handler(data_s, status, list);
+					socket_write(s, "226 Transfer complete\n");
+					break;
+				}
+			}
+			//TODO: o que responder com LIST antes de PASV?
+        }
+		/******************************* MLSD *********************************/
+		else if (authcheckcmd("MLSD")) {
+			if (data_s) {
 				if (!fork()) {
 					char *list = listdir(cwd);
 					start_data_handler(data_s, status, list);
@@ -107,8 +137,8 @@ start_control_handler(Socket *s_arg, int *status)
 					break;
 				}
 			}
-			//TODO: o que responder com LIST antes de PASV?
-        }
+			//TODO: o que responder com MLSD antes de PASV?
+		}
 		/******************************* TYPE *********************************/
 		else if (checkcmd("TYPE")) {
 			if (strcmp(buffer + 5, "I") == 0)
@@ -128,6 +158,20 @@ start_control_handler(Socket *s_arg, int *status)
 						  socket_port(data_s) / 256,
 						  socket_port(data_s) % 256);
 		}
+		/******************************* PORT *********************************/
+		else if (authcheckcmd("PORT")) {
+			socket_write(s, "501 Server cannot accept argument.\n");
+		}
+		else if (authcheckcmd("SYST")) {
+			socket_write(s, "215 UNIX Type: L8.\n");
+		}
+		else if (authcheckcmd("FEAT")) {
+			socket_write(s, "211 Features:\n");
+			socket_write(s, "   UTF8\n");
+		}
+		else if (authcheckcmd("OPTS UTF8 ON")) {
+			socket_write(s, "200 UTF8 set to on\n");
+		}
 		/****************************** DEBUG *********************************/
 		else if (checkcmd("DEBUG")) {
 			socket_writef(s, "User: %s\n", user);
@@ -144,6 +188,7 @@ start_control_handler(Socket *s_arg, int *status)
 		if (strlen(user) && strlen(pass)) logged = true;
 		else logged = false;
 		denied = false;
+		
 	}
 	/* TODO - Missing commands:
 	    USER r0zbot
