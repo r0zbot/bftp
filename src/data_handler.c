@@ -6,11 +6,6 @@
 #include "util.h"
 #include "data_handler.h"
 
-// Helper for simplified socket writing, freeing the buffer after usage
-char *socket_tmp;
-#define socket_writef(x, ...) \
-socket_tmp = concatf(__VA_ARGS__);\
-socket_write(x, socket_tmp);
 
 Socket *ds_copy;
 

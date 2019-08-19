@@ -22,12 +22,6 @@
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
 
-// Helper for simplified socket writing, freeing the buffer after usage
-char *socket_tmp;
-#define socket_writef(x, ...) \
-socket_tmp = concatf(__VA_ARGS__);\
-socket_write(x, socket_tmp);
-
 // Helper for simplified command checking with authentication
 #define checkcmd(str) (strncmpi(buffer, str, strlen(str)) == 0)
 #define authcheckcmd(str) (checkcmd(str) && (denied = true) && logged) // yes, its an assignment
@@ -36,8 +30,8 @@ char *buffer,
 	 *user,
 	 *pass;
 
-Socket *s;
-Socket *data_s;
+Socket *s = NULL;
+Socket *data_s = NULL;
 
 void
 start_control_handler(Socket *s_arg, int *status)
@@ -50,7 +44,7 @@ start_control_handler(Socket *s_arg, int *status)
 	
 	char cwd[PATH_MAX];
 	getcwd(cwd, sizeof(char) * PATH_MAX);
-	strcat(cwd, "/ftp/");
+//	strcat(cwd, "/ftp/"); ??? por que?
 	
 	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\n", socket_ip(s));
 	
@@ -76,10 +70,12 @@ start_control_handler(Socket *s_arg, int *status)
 		}
 		/******************************* PASS *********************************/
 		else if (checkcmd("PASS")) {
-			if (!strlen(user))
-				socket_write(s, "503 Login with USER first\n");
-			else if (strncmp(buffer + 5, "ftp", MAX_PASS_LENGTH))
-				socket_write(s, "530 Login incorrect.\n");
+			if (!strlen(user)) {
+                socket_write(s, "503 Login with USER first\n");
+            }
+			else if (strncmp(buffer + 5, "ftp", MAX_PASS_LENGTH)){
+                socket_write(s, "530 Login incorrect\n");
+            }
 			else {
 				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
 				socket_writef(s, "230 User %s logged in\n", user);
@@ -141,14 +137,17 @@ start_control_handler(Socket *s_arg, int *status)
 		}
 		/******************************* TYPE *********************************/
 		else if (checkcmd("TYPE")) {
-			if (strcmp(buffer + 5, "I") == 0)
-				socket_write(s, "200 Type set to I\n");
-			else if (strcmp(buffer + 5, "A") == 0)
-				socket_write(s, "200 Type set to A\n");
+			if (strcmp(buffer + 5, "I") == 0){
+                socket_write(s, "200 Type set to I\n");
+			}
+			else if (strcmp(buffer + 5, "A") == 0){
+                socket_write(s, "200 Type set to A\n");
+			}
 			// TODO: setar alguma variável do type?
-			else
-				socket_writef(s, "504 TYPE not implemented for %s parameter\n",
-							  buffer + 5);
+			else{
+                socket_writef(s, "504 TYPE not implemented for %s parameter\n", buffer + 5);
+			}
+
 		}
 		/******************************* PASV *********************************/
 		else if (authcheckcmd("PASV")) {
@@ -177,11 +176,19 @@ start_control_handler(Socket *s_arg, int *status)
 			socket_writef(s, "User: %s\n", user);
 			socket_writef(s, "Pass: %s\n", pass);
 			socket_writef(s, "Buffer: %s\n", buffer);
-		}
+			socket_writef(s, "PID: %lu\n", getpid());
+            socket_writef(s, "IP: %s\n", socket_ip(s));
+            socket_writef(s, "Port: %d\n", socket_port(s));
+            if (data_s) { socket_writef(s, "Port data: %d\n", socket_port(data_s)); }
+        }
 		/******************************* ETC **********************************/
         else {
-            if (denied) socket_write(s, "530 Please login with USER and PASS\n");
-            else socket_writef(s, "500 %s not understood\n", buffer);
+            if (denied){
+                socket_write(s, "530 Please login with USER and PASS\n");
+            }
+            else{
+                socket_writef(s, "500 %s not understood\n", buffer);
+            }
         }
 
 		/* estado do login */
