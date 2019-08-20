@@ -47,7 +47,8 @@ start_control_handler(Socket *s_arg, int *status)
 	getcwd(cwd, sizeof(char) * PATH_MAX);
 	strcat(cwd, "/ftp/");
 	
-	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\n", socket_ip(s));
+//    socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\n", socket_ip(s));
+    socket_writef(s, "220 ProFTPD 1.3.5e Server (Debian) [%s]\n", socket_ip(s));
 	
 	bool logged = false;
 	bool denied = false; // Set to true when user is denied access to a command
@@ -94,7 +95,7 @@ start_control_handler(Socket *s_arg, int *status)
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
 			if (data_s) {
-				socket_write(s, "150 Opening ASCII mode data connection for file list\n");
+				socket_write(s, "150 Opening BINARY mode data connection for LIST\n");
 				// TODO: deixar bunitin e prever casos de erro
 				if (!fork()) {
 					FILE *fp;
@@ -161,8 +162,8 @@ start_control_handler(Socket *s_arg, int *status)
 			socket_write(s, "215 UNIX Type: L8.\n");
 		}
 		else if (authcheckcmd("FEAT")) {
-			socket_write(s, "211 Features:\n");
-			socket_write(s, "   UTF8\n");
+			socket_write(s, "211-Features:\n");
+			socket_write(s, "211 End\n");
 		}
 		else if (authcheckcmd("OPTS UTF8 ON")) {
 			socket_write(s, "200 UTF8 set to on\n");

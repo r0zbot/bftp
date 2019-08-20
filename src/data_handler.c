@@ -12,17 +12,19 @@ char *socket_tmp;
 socket_tmp = concatf(__VA_ARGS__);\
 socket_write(x, socket_tmp);
 
-Socket *ds_copy;
+Socket *ds;
 
 void
-start_data_handler(Socket *ds, int *status, void *msg)
+start_data_handler(Socket *ds_arg, int *status, void *msg)
 {
-	ds_copy = ds;
+    ds = ds_arg;
 	*status = DATA;
+    printf("data_handler: msg %s\n", (char *) msg);
 	if (socket_listen(ds) < 0) return;
+    printf("data_handler: accepting...");
 	socket_write(ds, msg);
-	socket_fin(ds_copy);
-	socket_close(ds_copy);
+	socket_fin(ds);
+	socket_close(ds);
 }
 
 void
