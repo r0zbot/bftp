@@ -12,11 +12,6 @@
 #include "control_handler.h"
 #include "data_handler.h"
 
-#ifdef __linux__ 
-        #include <linux/limits.h>
-#else
-        #include <limits.h>
-#endif
 
 #define BUFFER_SIZE 1024
 #define MAX_PASS_LENGTH 32
@@ -41,84 +36,89 @@ start_control_handler(Socket *s_arg, int *status)
 	user = emalloc(sizeof(char) * MAX_USER_LENGTH);
 	pass = emalloc(sizeof(char) * MAX_PASS_LENGTH);
 	*status = CONTROL;
-	
-	char cwd[PATH_MAX];
-	getcwd(cwd, sizeof(char) * PATH_MAX);
-//	strcat(cwd, "/ftp/"); ??? por que?
-	
-	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\n", socket_ip(s));
+
+	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\r\n", socket_ip(s));
 	
 	bool logged = false;
 	bool denied = false; // Set to true when user is denied access to a command
 	while (socket_read(s, buffer) > 0) {
-	    stripln(buffer, BUFFER_SIZE); //remove os \r e \n
+	    stripln(buffer, BUFFER_SIZE); //remove os \r e \r\n
 		// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
-		// TODO: tirar \n das responses?
+		// TODO: tirar \r\n das responses? RESPOSTA: \r\n é obrigatorio em todas as respostas
 		
 		/******************************* USER *********************************/
 		// TODO: consertar quando usuario vazio
 		// TODO: o que acontece se um usuário já logado tenta rodar USER?
 		// TODO: anon login?: 331 Anonymous login ok, send your complete email address as your password
 		if (checkcmd("USER")) {
-			if (strlen(user)) cwd[strlen(cwd) - strlen(user)] = '\0';
-			
 			strncpy(user, buffer + 5, MAX_USER_LENGTH);
 			pass[0] = '\0';
-			socket_writef(s, "331 Password required for %s\n", user);
-			
-			strcat(cwd, user);
+			socket_writef(s, "331 Password required for %s\r\n", user);
 		}
 		/******************************* PASS *********************************/
 		else if (checkcmd("PASS")) {
 			if (!strlen(user)) {
-                socket_write(s, "503 Login with USER first\n");
+                socket_write(s, "503 Login with USER first\r\n");
             }
-			else if (strncmp(buffer + 5, "ftp", MAX_PASS_LENGTH)){
-                socket_write(s, "530 Login incorrect\n");
-            }
+//			else if (strncmp(buffer + 5, "ftp", MAX_PASS_LENGTH)){
+//                socket_write(s, "530 Login incorrect\r\n");
+//            }
 			else {
 				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
-				socket_writef(s, "230 User %s logged in\n", user);
-				_mkdir(cwd);
+				socket_writef(s, "230 User %s logged in\r\n", user);
 			}
 		}
 		/******************************* QUIT *********************************/
 		else if (checkcmd("QUIT")) {
-			socket_write(s, "221 Goodbye.\n");
+			socket_write(s, "221 Goodbye.\r\n");
 //			stop_data_handler();
 			stop_control_handler();
 		}
 		/******************************** PWD *********************************/
         else if (authcheckcmd("PWD")) {
-            socket_writef(s, "257 \"%s\" is the current directory\n", cwd);
+            char cwd[PATH_MAX];
+            getcwd(cwd, sizeof(char) * PATH_MAX);
+            socket_writef(s, "257 \"%s\" is the current directory\r\n", cwd);
+        }
+            /******************************** CWD *********************************/
+        else if (authcheckcmd("CWD")) {
+            if(!chdir(buffer)){
+                socket_writef(s, "550 %s: No such file or directory\r\n", buffer);
+            }
+            else{
+                socket_write(s, "250 CWD command successful\r\n");
+            }
         }
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
 			if (data_s) {
-				socket_write(s, "150 Opening ASCII mode data connection for file list\n");
 				// TODO: deixar bunitin e prever casos de erro
-				if (!fork()) {
-					FILE *fp;
-					char command[PATH_MAX];
-					char entry[PATH_MAX];
-					char list[PATH_MAX];
-					bzero(&command, PATH_MAX);
-					bzero(&entry, PATH_MAX);
-					bzero(&list, PATH_MAX);
-					strcat(command, "/bin/ls -ld \"");
-					strcat(command, cwd);
-					strcat(command, "\" .*");
-					fp = popen(command, "r");
-					if (fp == NULL) exit("Failed to run command\n");
-					
-					while (fgets(entry, sizeof(entry) - 1, fp) != NULL)
-						strcat(list, entry);
-					
-					pclose(fp);
-					start_data_handler(data_s, status, list);
-					socket_write(s, "226 Transfer complete\n");
-					break;
-				}
+                if (!fork()) {
+                    char cwd[PATH_MAX];
+                    getcwd(cwd, sizeof(char) * PATH_MAX);
+                    FILE *fp;
+                    char command[PATH_MAX];
+                    char entry[PATH_MAX];
+                    char list[PATH_MAX];
+                    bzero(&command, PATH_MAX);
+                    bzero(&entry, PATH_MAX);
+                    bzero(&list, PATH_MAX);
+                    strcat(command, "/bin/ls -ld \"");
+                    strcat(command, cwd);
+                    strcat(command, "\" .*");
+                    fp = popen(command, "r");
+                    if (fp == NULL) exit("Failed to run command\r\n");
+
+                    while (fgets(entry, sizeof(entry) - 1, fp) != NULL) {
+                        strcat(list, entry);
+                    }
+
+                    pclose(fp);
+                    socket_write(s, "150 Opening ASCII mode data connection for file list\r\n");
+                    start_data_handler(data_s, status, list);
+                    socket_write(s, "226 Transfer complete\r\n");
+                    break;
+                }
 			}
 			//TODO: o que responder com LIST antes de PASV?
         }
@@ -126,6 +126,8 @@ start_control_handler(Socket *s_arg, int *status)
 		else if (authcheckcmd("MLSD")) {
 			if (data_s) {
 				if (!fork()) {
+                    char cwd[PATH_MAX];
+                    getcwd(cwd, sizeof(char) * PATH_MAX);
 					char *list = listdir(cwd);
 					start_data_handler(data_s, status, list);
 					// TODO: (child) transmitir transfer complete/error e quit
@@ -138,56 +140,59 @@ start_control_handler(Socket *s_arg, int *status)
 		/******************************* TYPE *********************************/
 		else if (checkcmd("TYPE")) {
 			if (strcmp(buffer + 5, "I") == 0){
-                socket_write(s, "200 Type set to I\n");
+                socket_write(s, "200 Type set to I\r\n");
 			}
 			else if (strcmp(buffer + 5, "A") == 0){
-                socket_write(s, "200 Type set to A\n");
+                socket_write(s, "200 Type set to A\r\n");
 			}
 			// TODO: setar alguma variável do type?
 			else{
-                socket_writef(s, "504 TYPE not implemented for %s parameter\n", buffer + 5);
+                socket_writef(s, "504 TYPE not implemented for %s parameter\r\n", buffer + 5);
 			}
 
 		}
 		/******************************* PASV *********************************/
-		else if (authcheckcmd("PASV")) {
+		else if (checkcmd("PASV")) {
             data_s = socket_open(0);
-            socket_writef(s, "227 Entering Passive Mode (%s,%d,%d)\n",
+            printf("Socket aberto na porta %d\r\n",socket_port(data_s));
+            socket_writef(s, "227 Entering Passive Mode (%s,%d,%d).\r\n",
 						  pasv(socket_ip(s)),
 						  socket_port(data_s) / 256,
 						  socket_port(data_s) % 256);
 		}
 		/******************************* PORT *********************************/
 		else if (authcheckcmd("PORT")) {
-			socket_write(s, "501 Server cannot accept argument.\n");
+			socket_write(s, "501 Server cannot accept argument.\r\n");
 		}
 		else if (authcheckcmd("SYST")) {
-			socket_write(s, "215 UNIX Type: L8.\n");
+			socket_write(s, "215 UNIX Type: L8.\r\n");
 		}
 		else if (authcheckcmd("FEAT")) {
-			socket_write(s, "211 Features:\n");
-			socket_write(s, "   UTF8\n");
+			socket_write(s, "211-Features:\r\n");
+            socket_write(s, "211 End\r\n");
 		}
 		else if (authcheckcmd("OPTS UTF8 ON")) {
-			socket_write(s, "200 UTF8 set to on\n");
+			socket_write(s, "200 UTF8 set to on\r\n");
 		}
 		/****************************** DEBUG *********************************/
 		else if (checkcmd("DEBUG")) {
-			socket_writef(s, "User: %s\n", user);
-			socket_writef(s, "Pass: %s\n", pass);
-			socket_writef(s, "Buffer: %s\n", buffer);
-			socket_writef(s, "PID: %lu\n", getpid());
-            socket_writef(s, "IP: %s\n", socket_ip(s));
-            socket_writef(s, "Port: %d\n", socket_port(s));
-            if (data_s) { socket_writef(s, "Port data: %d\n", socket_port(data_s)); }
+			socket_writef(s, "User: %s\r\n", user);
+			socket_writef(s, "Pass: %s\r\n", pass);
+			socket_writef(s, "Buffer: %s\r\n", buffer);
+			socket_writef(s, "PID: %lu\r\n", getpid());
+            socket_writef(s, "IP: %s\r\n", socket_ip(s));
+            socket_writef(s, "Port: %d\r\n", socket_port(s));
+            if (data_s) {
+                socket_writef(s, "Port data: %d\r\n", socket_port(data_s));
+            }
         }
 		/******************************* ETC **********************************/
         else {
             if (denied){
-                socket_write(s, "530 Please login with USER and PASS\n");
+                socket_write(s, "530 Please login with USER and PASS\r\n");
             }
             else{
-                socket_writef(s, "500 %s not understood\n", buffer);
+                socket_writef(s, "500 %s not understood\r\n", buffer);
             }
         }
 

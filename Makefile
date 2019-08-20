@@ -8,7 +8,7 @@ DATDIR	= data
 
 CC	= gcc
 TARGET	= bftp
-CFLAGS	= -std=c99 -Ofast -msse2 -march=native -Wall -Wextra -Wpedantic 
+CFLAGS	= -Ofast -msse2 -march=native -Wall -Wextra -Wpedantic
 LFLAGS	=
 
 SOURCES	:= $(wildcard $(SRCDIR)/*.c)

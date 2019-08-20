@@ -4,6 +4,12 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#ifdef __linux__
+    #include <linux/limits.h>
+#else
+    #include <limits.h>
+#endif
+
 #define CONNECTION	1
 #define CONTROL		2
 #define DATA		3

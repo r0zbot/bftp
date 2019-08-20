@@ -14,8 +14,11 @@ start_data_handler(Socket *ds, int *status, void *msg)
 {
 	ds_copy = ds;
 	*status = DATA;
+	printf("a");
 	if (socket_listen(ds) < 0) return;
+    printf("b");
 	socket_write(ds, msg);
+    printf("c");
 	socket_fin(ds_copy);
 	socket_close(ds_copy);
 }
