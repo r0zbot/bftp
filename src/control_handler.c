@@ -18,12 +18,13 @@
 #define MAX_USER_LENGTH 32
 
 // Helper for simplified command checking with authentication
-#define checkcmd(str) (strncmpi(buffer, str, strlen(str)) == 0)
+#define checkcmd(str) (strncmpi(buffer, str, strlen(str)) == 0 && (cmd_arg=buffer+(strlen(str)+1)))
 #define authcheckcmd(str) (checkcmd(str) && (denied = true) && logged) // yes, its an assignment
 
 char *buffer,
 	 *user,
-	 *pass;
+	 *pass,
+	 *cmd_arg;
 
 Socket *s = NULL;
 Socket *data_s = NULL;
@@ -51,7 +52,7 @@ start_control_handler(Socket *s_arg, int *status)
 		// TODO: o que acontece se um usuário já logado tenta rodar USER?
 		// TODO: anon login?: 331 Anonymous login ok, send your complete email address as your password
 		if (checkcmd("USER")) {
-			strncpy(user, buffer + 5, MAX_USER_LENGTH);
+			strncpy(user, cmd_arg, MAX_USER_LENGTH);
 			pass[0] = '\0';
 			socket_writef(s, "331 Password required for %s\r\n", user);
 		}
@@ -60,11 +61,11 @@ start_control_handler(Socket *s_arg, int *status)
 			if (!strlen(user)) {
                 socket_write(s, "503 Login with USER first\r\n");
             }
-//			else if (strncmp(buffer + 5, "ftp", MAX_PASS_LENGTH)){
+//			else if (strncmp(cmd_arg, "ftp", MAX_PASS_LENGTH)){
 //                socket_write(s, "530 Login incorrect\r\n");
 //            }
 			else {
-				strncpy(pass, buffer + 5, MAX_PASS_LENGTH);
+				strncpy(pass, cmd_arg, MAX_PASS_LENGTH);
 				socket_writef(s, "230 User %s logged in\r\n", user);
 			}
 		}
@@ -82,8 +83,10 @@ start_control_handler(Socket *s_arg, int *status)
         }
             /******************************** CWD *********************************/
         else if (authcheckcmd("CWD")) {
-            if(!chdir(buffer)){
-                socket_writef(s, "550 %s: No such file or directory\r\n", buffer);
+            dprint("Mudando de diretorio para %s", cmd_arg);
+
+            if(!chdir(cmd_arg+4)){
+                socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
             }
             else{
                 socket_write(s, "250 CWD command successful\r\n");
@@ -124,6 +127,7 @@ start_control_handler(Socket *s_arg, int *status)
         }
 		/******************************* MLSD *********************************/
 		else if (authcheckcmd("MLSD")) {
+		    //Desnecessario, é só não falar que tem essa feature
 			if (data_s) {
 				if (!fork()) {
                     char cwd[PATH_MAX];
@@ -139,20 +143,20 @@ start_control_handler(Socket *s_arg, int *status)
 		}
 		/******************************* TYPE *********************************/
 		else if (checkcmd("TYPE")) {
-			if (strcmp(buffer + 5, "I") == 0){
+			if (strcmp(cmd_arg, "I") == 0){
                 socket_write(s, "200 Type set to I\r\n");
 			}
-			else if (strcmp(buffer + 5, "A") == 0){
+			else if (strcmp(cmd_arg, "A") == 0){
                 socket_write(s, "200 Type set to A\r\n");
 			}
 			// TODO: setar alguma variável do type?
 			else{
-                socket_writef(s, "504 TYPE not implemented for %s parameter\r\n", buffer + 5);
+                socket_writef(s, "504 TYPE not implemented for %s parameter\r\n", cmd_arg);
 			}
 
 		}
 		/******************************* PASV *********************************/
-		else if (checkcmd("PASV")) {
+		else if (authcheckcmd("PASV")) {
             data_s = socket_open(0);
             printf("Socket aberto na porta %d\r\n",socket_port(data_s));
             socket_writef(s, "227 Entering Passive Mode (%s,%d,%d).\r\n",
@@ -178,7 +182,7 @@ start_control_handler(Socket *s_arg, int *status)
 		else if (checkcmd("DEBUG")) {
 			socket_writef(s, "User: %s\r\n", user);
 			socket_writef(s, "Pass: %s\r\n", pass);
-			socket_writef(s, "Buffer: %s\r\n", buffer);
+			socket_writef(s, "Buffer: %s\r\n", cmd_arg);
 			socket_writef(s, "PID: %lu\r\n", getpid());
             socket_writef(s, "IP Cliente: %s\r\n", socket_ip_client(s));
             socket_writef(s, "IP Server: %s\r\n", socket_ip_server(s));
@@ -193,7 +197,7 @@ start_control_handler(Socket *s_arg, int *status)
                 socket_write(s, "530 Please login with USER and PASS\r\n");
             }
             else{
-                socket_writef(s, "500 %s not understood\r\n", buffer);
+                socket_writef(s, "500 %s not understood\r\n", cmd_arg);
             }
         }
 
