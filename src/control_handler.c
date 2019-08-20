@@ -13,7 +13,7 @@
 #include "data_handler.h"
 
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 1398
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
 
@@ -101,7 +101,7 @@ start_control_handler(Socket *s_arg, int *status)
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
 			if (data_s) {
-				socket_write(s, "150 Opening BINARY mode data connection for for file list\r\n");
+				socket_write(s, "150 Opening BINARY mode data connection for file list\r\n");
 				// TODO: deixar bunitin e prever casos de erro
                 if (!fork()) {
                     FILE *fp;
@@ -115,7 +115,7 @@ start_control_handler(Socket *s_arg, int *status)
                     strcat(command, cwd);
                     strcat(command, "\"");
                     fp = popen(command, "r");
-                    if (fp == NULL) exit("Failed to run command\n");
+                    
 
                     while (fgets(entry, sizeof(entry) - 1, fp) != NULL)
                         strcat(list, entry);
@@ -124,9 +124,37 @@ start_control_handler(Socket *s_arg, int *status)
                     start_data_handler(data_s, status, list);
                     socket_write(s, "226 Transfer complete\r\n");
                     stop_data_handler();
+                    // TODO: handle fp == NULL
                 }
 			}
 			//TODO: o que responder com LIST antes de PASV?
+        }
+        /******************************* RETR *********************************/
+        else if (authcheckcmd("RETR")) {
+            if (data_s) {
+                socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
+                // TODO: binary/ascii?
+                if (!fork()) {
+                    FILE *fp;
+                    fp = fopen(cmd_arg, "r");
+                    if (fp) {
+                        struct stat st;
+                        stat(cmd_arg, &st);
+                        int bytes_read = 0;
+                        while (bytes_read < st.st_size) {
+                            bytes_read += read(fileno(fp), buffer, BUFFER_SIZE);
+                            start_data_handler(data_s, status, (void *) buffer);
+                            printf("bytes read %d\n st.st_size %d\n", bytes_read, st.st_size);
+                        }
+                        printf("bytes read %d\n st.st_size %d\n", bytes_read, st.st_size);
+                        fclose(fp);
+                        socket_write(s, "226 Transfer complete\r\n");
+                        stop_data_handler();
+                    }
+                    else ;// TODO: arquivo n existe
+                }
+            }
+            //TODO: o que responder com LIST antes de PASV?
         }
 		/******************************* MLSD *********************************/
 		else if (authcheckcmd("MLSD")) {

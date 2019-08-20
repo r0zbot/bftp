@@ -17,15 +17,13 @@ start_data_handler(Socket *ds_arg, int *status, void *msg)
     printf("data_handler: msg %s\n", (char *) msg);
 	if (socket_listen(ds) < 0) return;
 	socket_write(ds, msg);
-	socket_fin(ds);
-	socket_close(ds);
 }
 
 void
 stop_data_handler() {
-//	if (ds_copy) {
-//		socket_fin(ds_copy);
-//		socket_close(ds_copy);
-//	}
+    if (ds) {
+        socket_fin(ds);
+        socket_close(ds);
+    }
 	exit(0);
 }
