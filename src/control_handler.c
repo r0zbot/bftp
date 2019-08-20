@@ -12,8 +12,6 @@
 #include "control_handler.h"
 #include "data_handler.h"
 
-
-#define BUFFER_SIZE 1398
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
 
@@ -136,25 +134,36 @@ start_control_handler(Socket *s_arg, int *status)
                 socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
                 // TODO: binary/ascii?
                 if (!fork()) {
-                    FILE *fp;
-                    fp = fopen(cmd_arg, "r");
-                    if (fp) {
-                        struct stat st;
-                        stat(cmd_arg, &st);
-                        int bytes_read = 0;
-                        start_data_handler(data_s, status);
-                        while (bytes_read < st.st_size) {
-                            bytes_read += read(fileno(fp), buffer, BUFFER_SIZE);
-                            data_handler_send((void *) buffer);
-                        }
-                        fclose(fp);
+                    start_data_handler(data_s, status);
+                    if (!data_handler_send_file(cmd_arg, (void *) buffer))
                         socket_write(s, "226 Transfer complete\r\n");
-                        stop_data_handler();
-                    }
-                    else ;// TODO: arquivo n existe
+                    else
+                        socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
+                    stop_data_handler();
                 }
             }
-            //TODO: o que responder com LIST antes de PASV?
+            //TODO: o que responder com RETR antes de PASV?
+        }
+        /******************************* STOR *********************************/
+        else if (authcheckcmd("STOR")) {
+//            if (data_s) {
+//                socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
+//                // TODO: binary/ascii?
+//                if (!fork()) {
+//                    FILE *fp;
+//                    fp = fopen(cmd_arg, "w");
+//                    // TODO: encapsular a segmentação da msg no módulo data_handler
+//                    if (fp) {
+//                        start_data_handler(data_s, status);
+//                        data_handler_read
+//                        fclose(fp);
+//                        socket_write(s, "226 Transfer complete\r\n");
+//                        stop_data_handler();
+//                    }
+//                    else ;//socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
+//                }
+//            }
+            //TODO: o que responder com STOR antes de PASV?
         }
 		/******************************* MLSD *********************************/
 		else if (authcheckcmd("MLSD")) {
