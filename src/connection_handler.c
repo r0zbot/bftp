@@ -19,7 +19,7 @@ start_connection_handler(int *status, int port)
 	*status = CONNECTION;
 	s = socket_open(port);
 	
-	printf("bftp escutando na porta %d...\n", socket_port(s));
+	dprint("bftp escutando na porta %d...\n", socket_port(s));
 	
 	while (true) {
 		if (socket_listen(s) < 0) break;

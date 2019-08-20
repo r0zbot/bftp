@@ -6,11 +6,6 @@
 #include "util.h"
 #include "data_handler.h"
 
-// Helper for simplified socket writing, freeing the buffer after usage
-char *socket_tmp;
-#define socket_writef(x, ...) \
-socket_tmp = concatf(__VA_ARGS__);\
-socket_write(x, socket_tmp);
 
 Socket *ds;
 
@@ -21,7 +16,6 @@ start_data_handler(Socket *ds_arg, int *status, void *msg)
 	*status = DATA;
     printf("data_handler: msg %s\n", (char *) msg);
 	if (socket_listen(ds) < 0) return;
-    printf("data_handler: accepting...");
 	socket_write(ds, msg);
 	socket_fin(ds);
 	socket_close(ds);

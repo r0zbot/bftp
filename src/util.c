@@ -4,10 +4,10 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <limits.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include "../hdr/error.h"
+#include "util.h"
 
 // Code from https://stackoverflow.com/questions/24442459/returning-formatted-string-from-c-function
 char* concatf(const char* fmt, ...) {
@@ -65,7 +65,6 @@ listdir(const char *path)
 		out = malloc(sizeof(char) * entries * FILENAME_MAX);
 		strcpy(out, "XXX Directory contents");
 		/* print all the files and directories within directory */
-		entries = 0;
 		dir = opendir (path);
 		while ((ent = readdir (dir)) != NULL) {
 			strcat(out, "\nXXX ");
@@ -100,8 +99,12 @@ pasv(char *ip)
 {
 	char *str = strdup(ip);
 	char *begin = str;
-	while (*str++ != '\0') if (*str == '.') *str = ',';
-	return begin;
+	while (*str++ != '\0'){
+	    if (*str == '.') {
+	        *str = ',';
+	    }
+    }
+    return begin;
 }
 
 void

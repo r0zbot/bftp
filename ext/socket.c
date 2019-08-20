@@ -283,13 +283,27 @@ socket_write(int vargc, ...)
     else return send(s -> sockfd, buffer, buffersize, flags);
 }
 /**
- * socket_ip(): returns ip address in printable format
+ * socket_ip(): returns ip address of client in printable format
  * @s: socket which will be read
  */
 char *
-socket_ip(Socket *s)
+socket_ip_client(Socket *s)
 {
 	return inet_ntoa(s -> cliaddr.sin_addr);
+}
+
+/**
+ * socket_ip(): returns ip address of server in printable format
+ * @s: socket which will be read
+ */
+char *
+socket_ip_server(Socket *s)
+{
+    struct sockaddr_in localAddress;
+    socklen_t addressLength = sizeof(localAddress);;
+    getsockname(s -> connfd, (struct sockaddr*) &localAddress, &addressLength);
+
+    return inet_ntoa(localAddress.sin_addr);
 }
 
 /**
