@@ -40,16 +40,18 @@ start_control_handler(Socket *s_arg, int *status)
 	pass = emalloc(sizeof(char) * MAX_PASS_LENGTH);
 	*status = CONTROL;
 	
-	char cwd[PATH_MAX];
-	getcwd(cwd, sizeof(char) * PATH_MAX);
-	strcat(cwd, "/ftp/");
-    char *cwd_bkp = strdup(cwd);
+	char cwd_init[PATH_MAX];
+	getcwd(cwd_init, sizeof(char) * PATH_MAX);
+	strcat(cwd_init, "/ftp/");
+    char cwd[PATH_MAX];
+    strncpy(cwd, cwd_init, PATH_MAX);
 
 	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\r\n", socket_ip_client(s));
 	
 	bool logged = false;
 	bool denied = false; // Set to true when user is denied access to a command
 	while (socket_read(s, buffer) > 0) {
+        getcwd(cwd, sizeof(char) * PATH_MAX);
 	    stripln(buffer, BUFFER_SIZE); //remove os \r e \r\n
 		// TODO: USERxxx ou PASSxxx aceitos como comandos válidos
 		// TODO: tirar \r\n das responses? RESPOSTA: \r\n é obrigatorio em todas as respostas
@@ -65,16 +67,15 @@ start_control_handler(Socket *s_arg, int *status)
 		}
 		/******************************* PASS *********************************/
 		else if (checkcmd("PASS")) {
-			if (!strlen(user)) {
-                socket_write(s, "503 Login with USER first\r\n");
-            }
+			if (!strlen(user)) socket_write(s, "503 Login with USER first\r\n");
 			else {
 				strncpy(pass, cmd_arg, MAX_PASS_LENGTH);
 				socket_writef(s, "230 User %s logged in\r\n", user);
                 
-                strncpy(cwd, cwd_bkp, PATH_MAX);
+                strncpy(cwd, cwd_init, PATH_MAX);
                 strcat(cwd, user);
                 _mkdir(cwd);
+                chdir(cwd);
 			}
 		}
 		/******************************* QUIT *********************************/
@@ -89,22 +90,13 @@ start_control_handler(Socket *s_arg, int *status)
         }
         /******************************** CWD *********************************/
         else if (authcheckcmd("CWD")) {
-            if (chdir(cmd_arg)) {
-                socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
-            }
-            else {
-                strncpy(cwd, cmd_arg, PATH_MAX);
-                socket_write(s, "250 CWD command successful\r\n");
-            }
+            if (!chdir(cmd_arg)) socket_write(s, "250 CWD command successful\r\n");
+            else socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
         }
         /******************************* CDUP *********************************/
         else if (authcheckcmd("CDUP")) {
-            for (char *c = &cwd[strlen(cwd)]; c > &cwd[0]; c--)
-                if (*c == '/') {
-                    *c = '\0';
-                    break;
-                }
-            socket_write(s, "250 CDUP command successful\r\n");
+            if (!chdir("..")) socket_write(s, "250 CDUP command successful\r\n");
+            else socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
         }
 		/******************************* LIST *********************************/
         else if (authcheckcmd("LIST")) {
@@ -123,7 +115,7 @@ start_control_handler(Socket *s_arg, int *status)
                     strcat(command, cwd);
                     strcat(command, "\"");
                     fp = popen(command, "r");
-                    if (fp == NULL) exit("Failed to run command\r\n");
+                    if (fp == NULL) exit("Failed to run command\n");
 
                     while (fgets(entry, sizeof(entry) - 1, fp) != NULL)
                         strcat(list, entry);
@@ -131,7 +123,7 @@ start_control_handler(Socket *s_arg, int *status)
                     pclose(fp);
                     start_data_handler(data_s, status, list);
                     socket_write(s, "226 Transfer complete\r\n");
-                    break;
+                    stop_data_handler();
                 }
 			}
 			//TODO: o que responder com LIST antes de PASV?
@@ -220,10 +212,20 @@ start_control_handler(Socket *s_arg, int *status)
 		denied = false;
 		
 	}
-    free(cwd_bkp);
-    // TODO: liberar buffers etc nos forks
-    
-	/* TODO - Missing commands:
+    stop_control_handler();
+}
+
+void
+stop_control_handler() {
+	socket_fin(s);
+	socket_close(s);
+	free(buffer);
+	free(user);
+	free(pass);
+	exit(0);
+}
+
+/* TODO - Missing commands:
 	    USER r0zbot
 	        331 Password required for r0zbot
 	    PASS senha
@@ -270,14 +272,3 @@ start_control_handler(Socket *s_arg, int *status)
 	        350 Restarting at 0. Send STORE or RETRIEVE to initiate transfer
 	        421 No transfer timeout (600 seconds): closing control connection
 	 */
-}
-
-void
-stop_control_handler() {
-	socket_fin(s);
-	socket_close(s);
-	free(buffer);
-	free(user);
-	free(pass);
-	exit(0);
-}
