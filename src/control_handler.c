@@ -146,23 +146,19 @@ start_control_handler(Socket *s_arg, int *status)
         }
         /******************************* STOR *********************************/
         else if (authcheckcmd("STOR")) {
-//            if (data_s) {
-//                socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
-//                // TODO: binary/ascii?
-//                if (!fork()) {
-//                    FILE *fp;
-//                    fp = fopen(cmd_arg, "w");
-//                    // TODO: encapsular a segmentação da msg no módulo data_handler
-//                    if (fp) {
-//                        start_data_handler(data_s, status);
-//                        data_handler_read
-//                        fclose(fp);
-//                        socket_write(s, "226 Transfer complete\r\n");
-//                        stop_data_handler();
-//                    }
-//                    else ;//socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
-//                }
-//            }
+            if (data_s) {
+                socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
+                // TODO: binary/ascii?
+                if (!fork()) {
+                    start_data_handler(data_s, status);
+                    if (!data_handler_receive_file(cmd_arg, (void *) buffer))
+                        socket_write(s, "226 Transfer complete\r\n");
+                    else
+                        socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
+                    // TODO: 550 ?
+                    stop_data_handler();
+                }
+            }
             //TODO: o que responder com STOR antes de PASV?
         }
 		/******************************* MLSD *********************************/

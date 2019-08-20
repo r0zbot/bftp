@@ -19,7 +19,8 @@ start_data_handler(Socket *ds_arg, int *status)
     socket_listen(ds);
 }
 
-int data_handler_send_file(char *file, void *buffer)
+int
+data_handler_send_file(char *file, void *buffer)
 {
     FILE *fp;
     fp = fopen(file, "r");
@@ -32,6 +33,19 @@ int data_handler_send_file(char *file, void *buffer)
             bytes_read += read(fileno(fp), buffer, BUFFER_SIZE);
             socket_write(ds, buffer);
         }
+        fclose(fp);
+        return 0;
+    }
+    else return 1;
+}
+
+int
+data_handler_receive_file(char *file, void *buffer)
+{
+    FILE *fp;
+    fp = fopen(file, "w");
+    if (fp) {
+        while (socket_read(ds, buffer) > 0) write(fileno(fp), buffer, BUFFER_SIZE);
         fclose(fp);
         return 0;
     }
