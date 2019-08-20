@@ -12,6 +12,7 @@ Socket *ds_copy;
 void
 start_data_handler(Socket *ds, int *status, void *msg)
 {
+    printf("a");
 	ds_copy = ds;
 	*status = DATA;
 	printf("a");

@@ -37,7 +37,7 @@ start_control_handler(Socket *s_arg, int *status)
 	pass = emalloc(sizeof(char) * MAX_PASS_LENGTH);
 	*status = CONTROL;
 
-	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\r\n", socket_ip(s));
+	socket_writef(s, "220 BFTP - Batista's FTP Server [%s]\r\n", socket_ip_client(s));
 	
 	bool logged = false;
 	bool denied = false; // Set to true when user is denied access to a command
@@ -156,7 +156,7 @@ start_control_handler(Socket *s_arg, int *status)
             data_s = socket_open(0);
             printf("Socket aberto na porta %d\r\n",socket_port(data_s));
             socket_writef(s, "227 Entering Passive Mode (%s,%d,%d).\r\n",
-						  pasv(socket_ip(s)),
+						  pasv(socket_ip_server(s)),
 						  socket_port(data_s) / 256,
 						  socket_port(data_s) % 256);
 		}
@@ -180,7 +180,8 @@ start_control_handler(Socket *s_arg, int *status)
 			socket_writef(s, "Pass: %s\r\n", pass);
 			socket_writef(s, "Buffer: %s\r\n", buffer);
 			socket_writef(s, "PID: %lu\r\n", getpid());
-            socket_writef(s, "IP: %s\r\n", socket_ip(s));
+            socket_writef(s, "IP Cliente: %s\r\n", socket_ip_client(s));
+            socket_writef(s, "IP Server: %s\r\n", socket_ip_server(s));
             socket_writef(s, "Port: %d\r\n", socket_port(s));
             if (data_s) {
                 socket_writef(s, "Port data: %d\r\n", socket_port(data_s));

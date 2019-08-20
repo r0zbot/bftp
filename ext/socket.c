@@ -283,13 +283,25 @@ socket_write(int vargc, ...)
     else return send(s -> sockfd, buffer, buffersize, flags);
 }
 /**
- * socket_ip(): returns ip address in printable format
+ * socket_ip(): returns ip address of client in printable format
  * @s: socket which will be read
  */
 char *
-socket_ip(Socket *s)
+socket_ip_client(Socket *s)
 {
 	return inet_ntoa(s -> cliaddr.sin_addr);
+}
+
+/**
+ * socket_ip(): returns ip address of server in printable format
+ * @s: socket which will be read
+ */
+char *
+socket_ip_server(Socket *s)
+{
+    //TODO fix this
+    //return inet_ntoa(s -> servaddr.sin_addr);
+    return "192.168.192.203";
 }
 
 /**

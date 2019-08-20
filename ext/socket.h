@@ -49,7 +49,10 @@ void
 socket_fin(Socket *s);
 
 char *
-socket_ip(Socket *s);
+socket_ip_client(Socket *s);
+
+char *
+socket_ip_server(Socket *s);
 
 /* These macros will prepend the number of args before function calls */
 
