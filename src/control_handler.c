@@ -85,7 +85,7 @@ start_control_handler(Socket *s_arg, int *status)
         else if (authcheckcmd("CWD")) {
             dprint("Mudando de diretorio para %s", cmd_arg);
 
-            if(!chdir(cmd_arg+4)){
+            if(chdir(cmd_arg)){
                 socket_writef(s, "550 %s: No such file or directory\r\n", cmd_arg);
             }
             else{

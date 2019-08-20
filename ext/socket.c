@@ -299,9 +299,11 @@ socket_ip_client(Socket *s)
 char *
 socket_ip_server(Socket *s)
 {
-    //TODO fix this
-    //return inet_ntoa(s -> servaddr.sin_addr);
-    return "192.168.192.203";
+    struct sockaddr_in localAddress;
+    socklen_t addressLength = sizeof(localAddress);;
+    getsockname(s->connfd, (struct sockaddr*)&localAddress, &addressLength);
+
+    return inet_ntoa(localAddress.sin_addr);
 }
 
 /**
