@@ -106,9 +106,9 @@ start_control_handler(Socket *s_arg, int *status)
                     bzero(&command, PATH_MAX);
                     bzero(&entry, PATH_MAX);
                     bzero(&list, PATH_MAX);
-                    strcat(command, "/bin/ls -ld \"");
+                    strcat(command, "/bin/ls -la \"");
                     strcat(command, cwd);
-                    strcat(command, "\" .*");
+                    strcat(command, "\"");
                     fp = popen(command, "r");
                     if (fp == NULL) exit("Failed to run command\r\n");
 
