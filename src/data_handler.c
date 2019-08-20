@@ -10,13 +10,17 @@
 Socket *ds;
 
 void
-start_data_handler(Socket *ds_arg, int *status, void *msg)
+start_data_handler(Socket *ds_arg, int *status)
 {
     ds = ds_arg;
 	*status = DATA;
-    printf("data_handler: msg %s\n", (char *) msg);
-	if (socket_listen(ds) < 0) return;
-	socket_write(ds, msg);
+    socket_listen(ds);
+}
+
+void
+data_handler_send(void *msg)
+{
+    socket_write(ds, msg);
 }
 
 void

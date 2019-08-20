@@ -121,7 +121,8 @@ start_control_handler(Socket *s_arg, int *status)
                         strcat(list, entry);
                     
                     pclose(fp);
-                    start_data_handler(data_s, status, list);
+                    start_data_handler(data_s, status);
+                    data_handler_send((void *) list);
                     socket_write(s, "226 Transfer complete\r\n");
                     stop_data_handler();
                     // TODO: handle fp == NULL
@@ -141,12 +142,11 @@ start_control_handler(Socket *s_arg, int *status)
                         struct stat st;
                         stat(cmd_arg, &st);
                         int bytes_read = 0;
+                        start_data_handler(data_s, status);
                         while (bytes_read < st.st_size) {
                             bytes_read += read(fileno(fp), buffer, BUFFER_SIZE);
-                            start_data_handler(data_s, status, (void *) buffer);
-                            printf("bytes read %d\n st.st_size %d\n", bytes_read, st.st_size);
+                            data_handler_send((void *) buffer);
                         }
-                        printf("bytes read %d\n st.st_size %d\n", bytes_read, st.st_size);
                         fclose(fp);
                         socket_write(s, "226 Transfer complete\r\n");
                         stop_data_handler();
@@ -164,7 +164,8 @@ start_control_handler(Socket *s_arg, int *status)
                     char cwd[PATH_MAX];
                     getcwd(cwd, sizeof(char) * PATH_MAX);
 					char *list = listdir(cwd);
-					start_data_handler(data_s, status, list);
+					start_data_handler(data_s, status);
+                    data_handler_send((void *) list);
 					// TODO: (child) transmitir transfer complete/error e quit
 					free(list);
 					break;
