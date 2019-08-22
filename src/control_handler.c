@@ -151,20 +151,18 @@ start_control_handler(Socket *s_arg, int *status)
             }
             //TODO: o que responder com STOR antes de PASV?
         }
-            /******************************* MLSD *********************************/
-        else if (authcheckcmd("MLSD")) {
-            //Desnecessario, é só não falar que tem essa feature
-            if (data_s) {
-                if (!fork()) {
-                    char *list = listdir(cwd);
-                    start_data_handler(data_s, status);
-                    data_handler_send((void *) list);
-                    // TODO: (child) transmitir transfer complete/error e quit
-                    free(list);
-                    break;
-                }
-            }
-            //TODO: o que responder com MLSD antes de PASV?
+            /******************************* RMD *********************************/
+        else if (authcheckcmd("RMD")) {
+            if(!rmdir(cmd_arg)) socket_writef(s,"250 RMD command successfull\r\n")
+            else socket_writef(s, "550 %s: Could not remove\r\n", cmd_arg);
+        }
+            /******************************* DELE *********************************/
+        else if (authcheckcmd("DELE")) {
+            if(!remove(cmd_arg)) socket_writef(s,"250 DELE command successfull\r\n");
+        }
+            /******************************* MKD *********************************/
+        else if (authcheckcmd("MKD")) {
+            if(!mkdir(cmd_arg,S_IRWXU)) socket_writef(s,"257 \"%s\" - Directory successfully created\r\n", cmd_arg);
         }
             /******************************* TYPE *********************************/
         else if (checkcmd("TYPE")) {
@@ -242,49 +240,7 @@ stop_control_handler() {
 }
 
 /* TODO - Missing commands:
-	    USER r0zbot
-	        331 Password required for r0zbot
-	    PASS senha
-	        230 User r0zbot logged in
-	    SYST
-	        215 UNIX Type: L8
-	    FEAT
-	        211-Features:
-            211-CLNT
-            211-EPRT
-            211-EPSV
-            211-HOST
-            211-LANG en-US.UTF-8*;en-US
-            211-MDTM
-            211-MFF modify;UNIX.group;UNIX.mode;
-            211-MFMT
-            211-MLST modify*;perm*;size*;type*;unique*;UNIX.group*;UNIX.groupname*;UNIX.mode*;UNIX.owner*;UNIX.ownername*;
-            211-REST STREAM
-            211-SITE COPY
-            211-SITE MKDIR
-            211-SITE RMDIR
-            211-SITE SYMLINK
-            211-SITE UTIME
-            211-SIZE
-            211-TVFS
-            211-UTF8
-            211 End
-	    CLNT Cliente_de_FTP 1.0.0
-	        200 OK
-	    OPTS UTF8 ON
-	        200 UTF8 set to on
-	    PWD
-	        257 "/home/r0zbot" is the current directory
-	    TYPE A
-	        200 Type set to A
-	    PASV
-	        227 Entering Passive Mode (192,168,195,129,131,35).
-	    MLSD
-	        150 Opening ASCII mode data connection for MLSD
-	        226 Transfer complete
-	    TYPE A
-            200 Type set to A
-	    REST 0
-	        350 Restarting at 0. Send STORE or RETRIEVE to initiate transfer
-	        421 No transfer timeout (600 seconds): closing control connection
+    STOR saddsads
+        150 Opening BINARY mode data connection for saddsads
+        226 Transfer complete
 	 */
