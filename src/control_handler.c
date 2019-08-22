@@ -158,11 +158,13 @@ start_control_handler(Socket *s_arg, int *status)
         }
             /******************************* DELE *********************************/
         else if (authcheckcmd("DELE")) {
-            if(!remove(cmd_arg)) socket_writef(s,"250 DELE command successfull\r\n");
+            if(!remove(cmd_arg)) socket_writef(s,"250 DELE command successfull\r\n")
+            else socket_writef(s, "550 %s: Could not remove\r\n", cmd_arg);
         }
             /******************************* MKD *********************************/
         else if (authcheckcmd("MKD")) {
-            if(!mkdir(cmd_arg,S_IRWXU)) socket_writef(s,"257 \"%s\" - Directory successfully created\r\n", cmd_arg);
+            if(!mkdir(cmd_arg,S_IRWXU)) socket_writef(s,"257 \"%s\" - Directory successfully created\r\n", cmd_arg)
+            else socket_writef(s, "550 %s: Could not create\r\n", cmd_arg)
         }
             /******************************* TYPE *********************************/
         else if (checkcmd("TYPE")) {
@@ -240,7 +242,5 @@ stop_control_handler() {
 }
 
 /* TODO - Missing commands:
-    STOR saddsads
-        150 Opening BINARY mode data connection for saddsads
-        226 Transfer complete
+
 	 */
