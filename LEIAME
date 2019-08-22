@@ -1,14 +1,14 @@
 # EP1 - Servidor FTP
 ## Integrantes
-- Daniel Martinez - 10297709
 - Bruno Carneiro  - XXXXXXXX
+- Daniel Martinez - 10297709
 
 ## Compilação
 
 O projeto pode ser compilado usando o comando `make`, que criará o executável chamado `bftp` no diretório do projeto.
 Os arquivos de build podem ser limpados utilizando o comando `make clean`.
 
-Opcionalmente, também pode ser utilizado o CMake para compilação.
+Opcionalmente, também pode ser utilizado o CMake para compilação, através do comando `cmake . && cmake --build .` dentro da pasta do projeto.
 
 ## Execução
 
