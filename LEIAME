@@ -1,0 +1,18 @@
+# EP1 - Servidor FTP
+## Integrantes
+- Daniel Martinez - 10297709
+- Bruno Carneiro  - XXXXXXXX
+
+## Compilação
+
+O projeto pode ser compilado usando o comando `make`, que criará o executável chamado `bftp` no diretório do projeto.
+Os arquivos de build podem ser limpados utilizando o comando `make clean`.
+
+Opcionalmente, também pode ser utilizado o CMake para compilação.
+
+## Execução
+
+Para a execução, basta que seja executado o arquivo `./bftp`.
+
+Por padrão, ele abre na porta 21, mas um inteiro pode ser passado como argumento para alterar a porta em que ele escutará.
+Se o valor passado for 0, ele escolherá uma porta aleatória.
