@@ -213,10 +213,6 @@ start_control_handler(Socket *s_arg, int *status)
 			socket_write(s, "211-Features:\r\n");
             socket_write(s, "211 End\r\n");
 		}
-        /******************************* OPTS *********************************/
-		else if (authcheckcmd("OPTS UTF8 ON")) {
-			socket_write(s, "200 UTF8 set to on\r\n");
-		}
 		/****************************** DEBUG *********************************/
 		else if (checkcmd("DEBUG")) {
 			socket_writef(s, "User: %s\r\n", user);
