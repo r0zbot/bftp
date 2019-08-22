@@ -123,6 +123,7 @@ start_control_handler(Socket *s_arg, int *status)
             if (data_s) {
                 socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
                 // TODO: binary/ascii?
+                // TODO: fix case where file not exists
                 if (!fork()) {
                     start_data_handler(data_s, status);
                     if (!data_handler_send_file(cmd_arg, (void *) buffer))
@@ -155,16 +156,19 @@ start_control_handler(Socket *s_arg, int *status)
         else if (authcheckcmd("RMD")) {
             if(!rmdir(cmd_arg)) socket_writef(s,"250 RMD command successfull\r\n")
             else socket_writef(s, "550 %s: Could not remove\r\n", cmd_arg);
+            //TODO: more informative error messages
         }
             /******************************* DELE *********************************/
         else if (authcheckcmd("DELE")) {
             if(!remove(cmd_arg)) socket_writef(s,"250 DELE command successfull\r\n")
             else socket_writef(s, "550 %s: Could not remove\r\n", cmd_arg);
+            //TODO: more informative error messages
         }
             /******************************* MKD *********************************/
         else if (authcheckcmd("MKD")) {
             if(!mkdir(cmd_arg,S_IRWXU)) socket_writef(s,"257 \"%s\" - Directory successfully created\r\n", cmd_arg)
             else socket_writef(s, "550 %s: Could not create\r\n", cmd_arg)
+            //TODO: more informative error messages
         }
             /******************************* TYPE *********************************/
         else if (checkcmd("TYPE")) {
