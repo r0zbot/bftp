@@ -15,7 +15,7 @@ void
 start_data_handler(Socket *ds_arg, int *status)
 {
     ds = ds_arg;
-	*status = DATA;
+    *status = DATA;
     socket_listen(ds);
 }
 
@@ -70,5 +70,5 @@ stop_data_handler() {
         socket_fin(ds);
         socket_close(ds);
     }
-	exit(0);
+    exit(0);
 }

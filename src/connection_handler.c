@@ -16,15 +16,15 @@ Socket *s;
 void
 start_connection_handler(int *status, int port)
 {
-	*status = CONNECTION;
-	s = socket_open(port);
-	
-	dprint("bftp escutando na porta %d...\n", socket_port(s));
-	
-	while (true) {
-		if (socket_listen(s) < 0) break;
-		if (!fork()) start_control_handler(s, status);
-	}
+    *status = CONNECTION;
+    s = socket_open(port);
+
+    dprint("bftp escutando na porta %d...\n", socket_port(s));
+
+    while (true) {
+        if (socket_listen(s) < 0) break;
+        if (!fork()) start_control_handler(s, status);
+    }
 }
 
 /**
@@ -33,5 +33,5 @@ start_connection_handler(int *status, int port)
 void
 stop_connection_handler()
 {
-	socket_close(s);
+    socket_close(s);
 }

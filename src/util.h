@@ -7,9 +7,9 @@
 #define DEBUG 1
 
 #ifdef __linux__
-    #include <linux/limits.h>
+#include <linux/limits.h>
 #else
-    #include <limits.h>
+#include <limits.h>
 #endif
 
 #include <string.h>
@@ -44,7 +44,7 @@ char* print_tmp;
     free(print_tmp);\
 }
 #else
-    #define dprint(x,...) ;
+#define dprint(x,...) ;
 #endif
 
 #endif /* _UTIL_H_ */
