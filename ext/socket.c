@@ -8,23 +8,24 @@
 #undef socket_connect
 #undef socket_read
 #undef socket_write
+#undef socket_writef
 
 #ifdef _WIN32
-	#include <alloc.h>
+    #include <alloc.h>
 	#define MALLOC_SIZE(x) _msize(x)
 #elif __APPLE__
-	#include <malloc/malloc.h>
+    #include <malloc/malloc.h>
 	#define MALLOC_SIZE(x) malloc_size(x)
 #else
-/* Both linux and cygwin have the same path */
-	#include <malloc.h>
+    /* Both linux and cygwin have the same path */
+    #include <malloc.h>
     #define MALLOC_SIZE(x) malloc_usable_size(x)
 #endif
 
 struct Socket {
-	int sockfd, connfd;
-	struct sockaddr_in servaddr, cliaddr;
-	int type, protocol;
+    int sockfd, connfd;
+    struct sockaddr_in servaddr, cliaddr;
+    int type, protocol;
 };
 
 /**
@@ -45,10 +46,10 @@ socket_open(int vargc, ...)
     va_start(vargp, vargc);
     /* initialize with default values */
     int port = 0,
-        type = SOCK_STREAM,
-        protocol = 0,
-        family = AF_INET,
-        queue = 16;
+            type = SOCK_STREAM,
+            protocol = 0,
+            family = AF_INET,
+            queue = 16;
     /* assign custom values */
     for (int i = 0; i < vargc; i++) {
         if (i == 0) port = va_arg(vargp, int);
@@ -81,7 +82,7 @@ socket_open(int vargc, ...)
 
     if (bind(s -> sockfd, (struct sockaddr *) &s -> servaddr, sizeof(struct sockaddr_in)) == -1) {
         fprintf(stderr, "socket_open: cannot bind new socket\n");
-		// TODO: quit
+        // TODO: quit
         return NULL;
     }
 
@@ -92,10 +93,10 @@ socket_open(int vargc, ...)
             return NULL;
         }
     }
-    
+
 //    /* prints out random port */
 //    if (port == 0) printf("listening at port %d...\n", socket_port(s));
-    
+
     return s;
 }
 
@@ -110,12 +111,12 @@ socket_listen(Socket *s)
 {
     /* message-oriented error handling */
     if (!(s -> type == SOCK_STREAM || s -> type == SOCK_SEQPACKET)) return -1;
-	/* connection-oriented */
+    /* connection-oriented */
     if (s -> type == SOCK_STREAM || s -> type == SOCK_SEQPACKET) {
         unsigned int len = sizeof(s -> cliaddr);
         if ((s -> connfd = accept(s -> sockfd, (struct sockaddr *) &s -> cliaddr, &len)) == -1) {
 //            fprintf(stderr, "socket_listen: cannot accept on new socket\n");
-			// TODO: fazer direito
+            // TODO: fazer direito
             return -1;
         }
         else return s -> connfd;
@@ -142,7 +143,7 @@ socket_read(int vargc, ...)
     /* initialize with default values */
     struct Socket *s = NULL;
     void *buffer = NULL;
-	size_t buffersize = 0;
+    size_t buffersize = 0;
     int flags = 0;
     /* assign custom values */
     for (int i = 0; i < vargc; i++) {
@@ -152,17 +153,17 @@ socket_read(int vargc, ...)
         else if (i == 3) flags = va_arg(vargp, int);
     }
     va_end(vargp);
-	/* attempts to determine buffersize */
-	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
-	// TODO: how do we handle buffersize still being == 0?
-	
+    /* attempts to determine buffersize */
+    if (!buffersize) buffersize = MALLOC_SIZE(buffer);
+    // TODO: how do we handle buffersize still being == 0?
+
     /* wipes buffer clean */
     memset(buffer, 0, buffersize);
 //	/* server -> client */
 //	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
 //	/* client -> server */
 //	else return send(s -> sockfd, buffer, buffersize, flags);
-	
+
     return recv(s -> connfd, buffer, buffersize, flags);
 }
 
@@ -202,9 +203,9 @@ socket_connect(int vargc, ...)
     /* initialize with default values */
     char *address = "127.0.0.1";
     int port = 0,
-        type = SOCK_STREAM,
-        protocol = 0,
-        family = AF_INET;
+            type = SOCK_STREAM,
+            protocol = 0,
+            family = AF_INET;
     /* assign custom values */
     for (int i = 0; i < vargc; i++) {
         if (i == 0) address = va_arg(vargp, char *);
@@ -214,7 +215,7 @@ socket_connect(int vargc, ...)
         else if (i == 4) family = va_arg(vargp, int);
     }
     va_end(vargp);
-    
+
     /* init */
     Socket *s = (Socket *) malloc(sizeof(Socket));
     if (!s) {
@@ -223,23 +224,23 @@ socket_connect(int vargc, ...)
     }
     s -> type = type;
     s -> protocol = protocol;
-	
+
     if ((s -> sockfd = socket(family, type, protocol)) == -1) {
         fprintf(stderr, "socket_connect: cannot create new socket\n");
         return NULL;
     }
-	
+
     bzero(&s -> servaddr, sizeof(struct sockaddr_in));
     s -> servaddr.sin_family      = family;
     s -> servaddr.sin_addr.s_addr = inet_addr(address);
     s -> servaddr.sin_port        = htons(port);
-    
+
     /* attempts to connect to remote server */
     if (connect(s -> sockfd, (struct sockaddr *) &s -> servaddr, sizeof(struct sockaddr_in)) != 0) {
         fprintf(stderr, "socket_connect: cannot connect to server\n");
         return NULL;
     }
-    
+
     return s;
 }
 
@@ -262,7 +263,7 @@ socket_write(int vargc, ...)
     /* initialize with default values */
     struct Socket *s = NULL;
     void *buffer = NULL;
-	size_t buffersize = 0;
+    size_t buffersize = 0;
     int flags = 0;
     /* assign custom values */
     for (int i = 0; i < vargc; i++) {
@@ -272,16 +273,42 @@ socket_write(int vargc, ...)
         else if (i == 3) flags = va_arg(vargp, int);
     }
     va_end(vargp);
-	/* attempts to determine buffersize */
-	if (!buffersize) buffersize = strlen(buffer);
-	// TODO: dá pra inferir tamanho da struct?
-	if (!buffersize) buffersize = MALLOC_SIZE(buffer);
-	// TODO: how do we handle buffersize still being == 0?
-	/* server -> client */
-	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
-	/* client -> server */
+    /* attempts to determine buffersize */
+    if (!buffersize) buffersize = strlen(buffer);
+    // TODO: dá pra inferir tamanho de struct?
+    if (!buffersize) buffersize = MALLOC_SIZE(buffer);
+    // TODO: how do we handle buffersize still being == 0?
+    /* server -> client */
+    if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
+    /* client -> server */
     else return send(s -> sockfd, buffer, buffersize, flags);
 }
+
+/**
+ * socket_writef(): writes formatted message on given socket
+ * @s: pointer to the socket which will be written
+ * @fmsg: formatted message which we wish to write to socket
+ *
+ * @return: number of bytes written
+ */
+int
+socket_writef(Socket *s, char *fmsg, ...)
+{
+    /* parse va args */
+    va_list vargp;
+    va_start(vargp, fmsg);
+    int n = vsnprintf(NULL, 0, fmsg, vargp);
+    va_end(vargp);
+    if (n >= 0) {
+        va_start(vargp, fmsg);
+        char buffer[n + 1];
+        vsnprintf(buffer, n + 1, fmsg, vargp);
+        va_end(vargp);
+        return socket_write(2, s, buffer);
+    }
+    return socket_write(2, s, fmsg);
+}
+
 /**
  * socket_ip(): returns ip address of client in printable format
  * @s: socket which will be read
@@ -289,7 +316,7 @@ socket_write(int vargc, ...)
 char *
 socket_ip_client(Socket *s)
 {
-	return inet_ntoa(s -> cliaddr.sin_addr);
+    return inet_ntoa(s -> cliaddr.sin_addr);
 }
 
 /**
@@ -313,8 +340,8 @@ socket_ip_server(Socket *s)
 void
 socket_close(Socket *s)
 {
-	shutdown(s -> sockfd, SHUT_RDWR);
-	close(s -> sockfd);
+    shutdown(s -> sockfd, SHUT_RDWR);
+    close(s -> sockfd);
     free(s);
 }
 
@@ -325,8 +352,8 @@ socket_close(Socket *s)
 void
 socket_fin(Socket *s)
 {
-	shutdown(s -> connfd, SHUT_RDWR);
-	close(s -> connfd);
+    shutdown(s -> connfd, SHUT_RDWR);
+    close(s -> connfd);
 }
 
 /**
@@ -336,6 +363,6 @@ socket_fin(Socket *s)
 int
 socket_test()
 {
-	// TODO
+    // TODO
     return 0;
 }

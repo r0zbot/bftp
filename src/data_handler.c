@@ -15,12 +15,12 @@ void
 start_data_handler(Socket *ds_arg, int *status)
 {
     ds = ds_arg;
-	*status = DATA;
+    *status = DATA;
     socket_listen(ds);
 }
 
 int
-data_handler_send_file(char *file, void *buffer)
+data_handler_send_file(char *file, void *buffer, int type)
 {
     FILE *fp;
     fp = fopen(file, "r");
@@ -40,7 +40,7 @@ data_handler_send_file(char *file, void *buffer)
 }
 
 int
-data_handler_receive_file(char *file, void *buffer)
+data_handler_receive_file(char *file, void *buffer, int type)
 {
     FILE *fp;
     fp = fopen(file, "w");
@@ -70,5 +70,5 @@ stop_data_handler() {
         socket_fin(ds);
         socket_close(ds);
     }
-	exit(0);
+    exit(0);
 }

@@ -10,7 +10,8 @@
 #include "util.h"
 
 // Code from https://stackoverflow.com/questions/24442459/returning-formatted-string-from-c-function
-char* concatf(const char* fmt, ...) {
+char *
+concatf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char* buf = NULL;
@@ -53,75 +54,75 @@ stripln(char* str, size_t n)
 char *
 listdir(const char *path)
 {
-	DIR *dir;
-	struct dirent *ent;
-	unsigned long entries = 0;
-	char *out;
-	if ((dir = opendir (path)) != NULL) {
-		/* count files in directory for string size allocation */
-		while ((ent = readdir (dir)) != NULL) {
-			++entries;
-		}
-		out = malloc(sizeof(char) * entries * FILENAME_MAX);
-		strcpy(out, "XXX Directory contents");
-		/* print all the files and directories within directory */
-		dir = opendir (path);
-		while ((ent = readdir (dir)) != NULL) {
-			strcat(out, "\nXXX ");
-			strcat(out, ent->d_name);
-		}
-		strcat(out, "\n");
-		return (out);
-		closedir (dir);
-	}
-	else {
-		/* could not open directory */
-		return "XXX Could not open directory\n";
-	}
+    DIR *dir;
+    struct dirent *ent;
+    unsigned long entries = 0;
+    char *out;
+    if ((dir = opendir (path)) != NULL) {
+        /* count files in directory for string size allocation */
+        while ((ent = readdir (dir)) != NULL) {
+            ++entries;
+        }
+        out = malloc(sizeof(char) * entries * FILENAME_MAX);
+        strcpy(out, "XXX Directory contents");
+        /* print all the files and directories within directory */
+        dir = opendir (path);
+        while ((ent = readdir (dir)) != NULL) {
+            strcat(out, "\nXXX ");
+            strcat(out, ent->d_name);
+        }
+        strcat(out, "\n");
+        return (out);
+        closedir (dir);
+    }
+    else {
+        /* could not open directory */
+        return "XXX Could not open directory\n";
+    }
 }
 
 void *
 emalloc(size_t size) {
-	void *mem = malloc(size);
-	check_null(mem, "emalloc: no more mem!");
-	return mem;
+    void *mem = malloc(size);
+    check_null(mem, "emalloc: no more mem!");
+    return mem;
 }
 
 void *
 ecalloc(size_t size) {
-	void *mem = calloc(1, size);
-	check_null(mem, "ecalloc: no more mem!");
-	return mem;
+    void *mem = calloc(1, size);
+    check_null(mem, "ecalloc: no more mem!");
+    return mem;
 }
 
 char *
 pasv(char *ip)
 {
-	char *str = strdup(ip);
-	char *begin = str;
-	while (*str++ != '\0'){
-	    if (*str == '.') {
-	        *str = ',';
-	    }
+    char *str = strdup(ip);
+    char *begin = str;
+    while (*str++ != '\0'){
+        if (*str == '.') {
+            *str = ',';
+        }
     }
     return begin;
 }
 
 void
 _mkdir(const char *dir) {
-	char tmp[PATH_MAX];
-	char *p = NULL;
-	size_t len;
-	
-	snprintf(tmp, sizeof(tmp),"%s",dir);
-	len = strlen(tmp);
-	if(tmp[len - 1] == '/')
-		tmp[len - 1] = 0;
-	for(p = tmp + 1; *p; p++)
-		if(*p == '/') {
-			*p = 0;
-			mkdir(tmp, S_IRWXU);
-			*p = '/';
-		}
-	mkdir(tmp, S_IRWXU);
+    char tmp[PATH_MAX];
+    char *p = NULL;
+    size_t len;
+
+    snprintf(tmp, sizeof(tmp),"%s",dir);
+    len = strlen(tmp);
+    if(tmp[len - 1] == '/')
+        tmp[len - 1] = 0;
+    for(p = tmp + 1; *p; p++)
+        if(*p == '/') {
+            *p = 0;
+            mkdir(tmp, S_IRWXU);
+            *p = '/';
+        }
+    mkdir(tmp, S_IRWXU);
 }
