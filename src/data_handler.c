@@ -32,7 +32,7 @@ data_handler_send_file(char *file, void *buffer, int type)
         int bytes_read = 0;
         while (bytes_read < st.st_size) {
             bytes_read += read(fileno(fp), buffer, BUFFER_SIZE);
-            socket_write(ds, buffer);
+            socket_write(ds, buffer, BUFFER_SIZE);
         }
         fclose(fp);
         return 0;
@@ -48,7 +48,9 @@ data_handler_receive_file(char *file, void *buffer, int type)
     else fp = fopen(file, "w");
     
     if (fp) {
-        while (socket_read(ds, buffer) > 0) write(fileno(fp), buffer, BUFFER_SIZE);
+        while (socket_read(ds, buffer) > 0) {
+            write(fileno(fp), buffer, BUFFER_SIZE);
+        }
         fclose(fp);
         return 0;
     }
