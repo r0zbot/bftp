@@ -23,7 +23,8 @@ int
 data_handler_send_file(char *file, void *buffer, int type)
 {
     FILE *fp;
-    fp = fopen(file, "r");
+    if (type == BINARY) fp = fopen(file, "rb");
+    else fp = fopen(file, "r");
 
     if (fp) {
         struct stat st;
@@ -43,7 +44,9 @@ int
 data_handler_receive_file(char *file, void *buffer, int type)
 {
     FILE *fp;
-    fp = fopen(file, "w");
+    if (type == BINARY) fp = fopen(file, "wb");
+    else fp = fopen(file, "w");
+    
     if (fp) {
         while (socket_read(ds, buffer) > 0) write(fileno(fp), buffer, BUFFER_SIZE);
         fclose(fp);

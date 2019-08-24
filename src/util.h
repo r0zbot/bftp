@@ -18,6 +18,10 @@
 #define CONTROL		2
 #define DATA		3
 
+#define UNDEF  0
+#define BINARY 1
+#define ASCII  2
+
 char * concatf(const char* fmt, ...);
 
 int strncmpi(const char* s1, const char* s2, size_t n);

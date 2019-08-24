@@ -3,9 +3,7 @@
 
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
-#define UNDEF  0
-#define BINARY 1
-#define ASCII  2
+
 // TODO: token com strtok para parse do cmd e arg
 // Helper for simplified command checking with authentication
 #define checkcmd(str) (strncmpi(buffer, str, strlen(str)) == 0 && \
@@ -82,8 +80,6 @@ start_control_handler(Socket *s_arg, int *status)
             if (data_s) {
                 if (type == BINARY)
                     socket_write(s, "150 Opening BINARY mode data connection for file list\r\n");
-                else if (type == ASCII)
-                    socket_write(s, "150 Opening ASCII mode data connection for file list\r\n");
                 else
                     socket_write(s, "150 Opening ASCII mode data connection for file list\r\n");
                 
@@ -119,8 +115,6 @@ start_control_handler(Socket *s_arg, int *status)
             if (data_s) {
                 if (type == BINARY)
                     socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
-                else if (type == ASCII)
-                    socket_writef(s, "150 Opening ASCII mode data connection for %s\r\n", cmd_arg);
                 else
                     socket_writef(s, "150 Opening ASCII mode data connection for %s\r\n", cmd_arg);
                 
@@ -141,8 +135,6 @@ start_control_handler(Socket *s_arg, int *status)
         else if (authcheckcmd("STOR")) {
             if (type == BINARY)
                 socket_writef(s, "150 Opening BINARY mode data connection for %s\r\n", cmd_arg);
-            else if (type == ASCII)
-                socket_writef(s, "150 Opening ASCII mode data connection for %s\r\n", cmd_arg);
             else
                 socket_writef(s, "150 Opening ASCII mode data connection for %s\r\n", cmd_arg);
             
