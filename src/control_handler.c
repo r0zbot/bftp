@@ -11,9 +11,9 @@
 #define authcheckcmd(str) (checkcmd(str) && (denied = true) && logged)
 
 char *buffer,
-        *user,
-        *pass,
-        *cmd_arg;
+     *user,
+     *pass,
+     *cmd_arg;
 
 Socket *s = NULL;
 Socket *data_s = NULL;

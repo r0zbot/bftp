@@ -48,7 +48,7 @@ data_handler_receive_file(char *file, void *buffer, int type)
     else fp = fopen(file, "w");
     
     if (fp) {
-        while (socket_read(ds, buffer) > 0) {
+        while (socket_read(ds, buffer, BUFFER_SIZE) > 0) {
             write(fileno(fp), buffer, BUFFER_SIZE);
         }
         fclose(fp);

@@ -277,7 +277,7 @@ socket_write(int vargc, ...)
     if (!buffersize) buffersize = strlen(buffer);
     // TODO: dá pra inferir tamanho de struct?
     if (!buffersize) buffersize = MALLOC_SIZE(buffer);
-    // TODO: how do we handle buffersize still being == 0?
+    // TODO: how do we handle buffersize still being == 0? QUIT
     /* server -> client */
     if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
     /* client -> server */
