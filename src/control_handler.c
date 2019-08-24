@@ -1,16 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <ifaddrs.h>
-#include "../hdr/error.h"
-#include "util.h"
 #include "control_handler.h"
-#include "data_handler.h"
+
 
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32

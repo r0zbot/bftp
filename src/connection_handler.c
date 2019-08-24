@@ -1,17 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include "../ext/socket.h"
-#include "../hdr/error.h"
-#include "util.h"
-#include "control_handler.h"
 #include "connection_handler.h"
 
 Socket *s;
 
 /**
- * start_connection_handler()
+ * start_connection_handler():
+ *     Inicia o servidor usando a estrutura Socket e entra num loop. Caso uma
+ *     conexão TCP seja aceita, inicia a conexão de controle num outro processo.
+ *
+ * @status: indica em que fase o processo está
+ * @port: a porta na qual o servidor será aberto
  */
 void
 start_connection_handler(int *status, int port)
@@ -28,7 +25,8 @@ start_connection_handler(int *status, int port)
 }
 
 /**
- * stop_connection_handler()
+ * stop_connection_handler():
+ *     Fecha o socket e as conexões remanescentes, liberando a memória alocada.
  */
 void
 stop_connection_handler()
