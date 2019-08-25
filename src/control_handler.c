@@ -8,10 +8,16 @@
 #define AUTH_CMD(str) (CMD(str) && (denied = true) && logged)
 
 char *buffer;
-
 Socket *s = NULL;
 Socket *data_s = NULL;
 
+/**
+ * start_control_handler():
+ *     Conversa com o cliente na conexão fornecida pelo processo principal.
+ *
+ * @s_arg: o socket no qual vamos conversar com o cliente
+ * @status: indica em que fase o processo está
+ */
 void
 start_control_handler(Socket *s_arg, int *status)
 {
@@ -213,6 +219,10 @@ start_control_handler(Socket *s_arg, int *status)
     }
 }
 
+/**
+ * stop_control_handler():
+ *     Fecha o socket e as conexões remanescentes, liberando a memória alocada.
+ */
 void
 stop_control_handler() {
     socket_fin(s);
@@ -220,7 +230,3 @@ stop_control_handler() {
     free(buffer);
     exit(0);
 }
-
-/* TODO - Missing commands:
-
-	 */
