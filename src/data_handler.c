@@ -12,10 +12,9 @@
 Socket *ds;
 
 void
-start_data_handler(Socket *ds_arg, int *status)
+start_data_handler(Socket *ds_arg)
 {
     ds = ds_arg;
-    *status = DATA;
     socket_listen(ds);
 }
 
@@ -71,9 +70,7 @@ data_handler_read(void *buffer)
 
 void
 stop_data_handler() {
-    if (ds) {
-        socket_fin(ds);
-        socket_close(ds);
-    }
+    socket_fin(ds);
+    socket_close(ds);
     exit(0);
 }

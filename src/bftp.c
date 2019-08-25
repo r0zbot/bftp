@@ -19,7 +19,6 @@ sigint_handler()
 {
     if (*status == CONNECTION) stop_connection_handler();
     else if (*status == CONTROL) stop_control_handler();
-    else if (*status == DATA) stop_data_handler();
     free(status);
 }
 
