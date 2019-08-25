@@ -29,9 +29,8 @@ start_control_handler(Socket *s_arg, int *status)
     bool denied = false; // Set to true when user is denied access to a command
     while (socket_read(s, buffer) > 0) {
         stripln(buffer, BUFFER_SIZE); //remove os \r e \r\n
-        char *cmd, *arg, *saveptr;
-        cmd = strtok_r(buffer, " ", &saveptr);
-        arg = saveptr;
+        char *cmd, *arg;
+        cmd = strtok_r(buffer, " ", &arg);
         getcwd(cwd, sizeof(char) * PATH_MAX);
         /******************************* USER *********************************/
         if (CMD("USER")) {
