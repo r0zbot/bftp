@@ -1,6 +1,5 @@
 #include "control_handler.h"
 
-
 #define MAX_PASS_LENGTH 32
 #define MAX_USER_LENGTH 32
 

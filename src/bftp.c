@@ -7,8 +7,6 @@
 #include "data_handler.h"
 #include "util.h"
 
-//TODO: Fix compiler warnings
-
 int *status;
 
 /**
