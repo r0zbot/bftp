@@ -94,7 +94,7 @@ start_control_handler(Socket *s_arg, int *status)
                     fp = popen(command, "r");
                     read(fileno(fp), buffer, BUFFER_SIZE);
                     pclose(fp);
-                    start_data_handler(data_s);
+                    start_data_handler(data_s, status);
                     data_handler_send((void *) buffer);
                     socket_write(s, "226 Transfer complete\r\n");
                     stop_data_handler();
@@ -110,7 +110,7 @@ start_control_handler(Socket *s_arg, int *status)
                     socket_writef(s, "150 Opening ASCII mode data connection for %s\r\n", arg);
                 
                 if (!fork()) {
-                    start_data_handler(data_s);
+                    start_data_handler(data_s, status);
                     
                     if (!data_handler_send_file(arg, (void *) buffer, type))
                         socket_write(s, "226 Transfer complete\r\n");
@@ -129,7 +129,7 @@ start_control_handler(Socket *s_arg, int *status)
                 socket_writef(s, "150 Opening ASCII mode data connection for %s\r\n", arg);
             
             if (!fork()) {
-                start_data_handler(data_s);
+                start_data_handler(data_s, status);
                 
                 if (!data_handler_receive_file(arg, (void *) buffer, type))
                     socket_write(s, "226 Transfer complete\r\n");

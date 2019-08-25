@@ -16,12 +16,14 @@ Socket *ds;
  *     Bloqueia e esperar uma conexão TCP ser iniciada.
  *
  * @ds_arg: o socket no qual vamos trocar dados com o cliente
+ * @status: indica em que fase o processo está
  */
 void
-start_data_handler(Socket *ds_arg)
+start_data_handler(Socket *ds_arg, int *status)
 {
     ds = ds_arg;
     socket_listen(ds);
+    *status = DATA;
 }
 
 /**
