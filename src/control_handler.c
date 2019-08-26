@@ -24,8 +24,8 @@ start_control_handler(Socket *s_arg, int *status)
     s = s_arg;
     buffer = emalloc(sizeof(char) * BUFFER_SIZE);
     *status = CONTROL;
-    char user[MAX_USER_LENGTH];
-    char pass[MAX_PASS_LENGTH];
+    char user[MAX_USER_LENGTH+1];
+    char pass[MAX_PASS_LENGTH+1];
     char cwd[PATH_MAX];
     int type = UNDEF;
 
@@ -192,6 +192,13 @@ start_control_handler(Socket *s_arg, int *status)
             socket_write(s, "211-Features:\r\n");
             socket_write(s, "211 End\r\n");
         }
+        /******************************* SIZE *********************************/
+        else if (AUTH_CMD("SIZE")) {
+            struct stat st;
+
+            if (stat(arg, &st) == 0) socket_writef(s, "213 %d\r\n", st.st_size);
+            else socket_writef(s, "550 %s: Could not get size of %s\r\n", arg);
+        }
         /****************************** DEBUG *********************************/
 //        else if (CMD("DEBUG")) {
 //            socket_writef(s, "User: %s\r\n", user);
@@ -226,7 +233,7 @@ start_control_handler(Socket *s_arg, int *status)
 void
 stop_control_handler() {
     socket_fin(s);
-    socket_close(s);
+    //socket_close(s); TODO: close just connfd socket on QUIT ?
     free(buffer);
     exit(0);
 }
