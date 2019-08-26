@@ -15,7 +15,7 @@ start_connection_handler(int *status, int port)
 {
     *status = CONNECTION;
     s = socket_open(port);
-    if (!s) exit("bftp: Erro ao criar socket\n");
+    if (!s) fatal("bftp: Erro ao criar socket\n");
 
     dprint("bftp escutando na porta %d...\n", socket_port(s));
 
