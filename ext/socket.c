@@ -65,6 +65,7 @@ socket_open(int vargc, ...)
         fprintf(stderr, "socket_open: malloc error\n");
         return NULL;
     }
+    memset(s, 0, sizeof(Socket));
     s -> type = type;
     s -> protocol = protocol;
 
@@ -73,7 +74,6 @@ socket_open(int vargc, ...)
         return NULL;
     }
 
-    bzero(&s -> servaddr, sizeof(struct sockaddr_in));
     s -> servaddr.sin_family      = family;
     s -> servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     s -> servaddr.sin_port        = htons(port);
@@ -217,6 +217,7 @@ socket_connect(int vargc, ...)
         fprintf(stderr, "socket_connect: malloc error\n");
         return NULL;
     }
+    memset(s, 0, sizeof(Socket));
     s -> type = type;
     s -> protocol = protocol;
 
@@ -225,7 +226,6 @@ socket_connect(int vargc, ...)
         return NULL;
     }
 
-    bzero(&s -> servaddr, sizeof(struct sockaddr_in));
     s -> servaddr.sin_family      = family;
     s -> servaddr.sin_addr.s_addr = inet_addr(address);
     s -> servaddr.sin_port        = htons(port);
