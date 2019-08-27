@@ -193,16 +193,16 @@ start_control_handler(Socket *s_arg, int *status)
             socket_write(s, "211 End\r\n");
         }
         /****************************** DEBUG *********************************/
-//        else if (CMD("DEBUG")) {
-//            socket_writef(s, "User: %s\r\n", user);
-//            socket_writef(s, "Pass: %s\r\n", pass);
-//            socket_writef(s, "Buffer: %s\r\n", arg);
-//            socket_writef(s, "PID: %lu\r\n", getpid());
-//            socket_writef(s, "IP Cliente: %s\r\n", socket_ip_client(s));
-//            socket_writef(s, "IP Server: %s\r\n", socket_ip_server(s));
-//            socket_writef(s, "Port: %d\r\n", socket_port(s));
-//            if (data_s) socket_writef(s, "Data port: %d\r\n", socket_port(data_s));
-//        }
+        else if (CMD("DEBUG")) {
+            socket_writef(s, "User: %s\r\n", user);
+            socket_writef(s, "Pass: %s\r\n", pass);
+            socket_writef(s, "Buffer: %s\r\n", arg);
+            socket_writef(s, "PID: %lu\r\n", getpid());
+            socket_writef(s, "IP Cliente: %s\r\n", socket_ip_client(s));
+            socket_writef(s, "IP Server: %s\r\n", socket_ip_server(s));
+            socket_writef(s, "Port: %d\r\n", socket_port(s));
+            if (data_s) socket_writef(s, "Data port: %d\r\n", socket_port(data_s));
+        }
         /******************************* ETC **********************************/
         else {
             if (denied)

@@ -23,7 +23,7 @@ Socket *
 socket_open(int vargc, ...);
 
 int
-socket_listen(Socket *s);
+socket_accept(Socket *s);
 
 int
 socket_read(int vargc, ...);

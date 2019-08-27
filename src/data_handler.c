@@ -22,7 +22,7 @@ void
 start_data_handler(Socket *ds_arg, int *status)
 {
     ds = ds_arg;
-    socket_listen(ds);
+    socket_accept(ds);
     *status = DATA;
 }
 

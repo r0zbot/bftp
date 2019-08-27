@@ -12,12 +12,11 @@
 
 #ifdef _WIN32
     #include <alloc.h>
-	#define MALLOC_SIZE(x) _msize(x)
+    #define MALLOC_SIZE(x) _msize(x)
 #elif __APPLE__
     #include <malloc/malloc.h>
-	#define MALLOC_SIZE(x) malloc_size(x)
+    #define MALLOC_SIZE(x) malloc_size(x)
 #else
-    /* Both linux and cygwin have the same path */
     #include <malloc.h>
     #define MALLOC_SIZE(x) malloc_usable_size(x)
 #endif
@@ -44,13 +43,13 @@ socket_open(int vargc, ...)
     /* parse va args */
     va_list vargp;
     va_start(vargp, vargc);
-    /* initialize with default values */
+    
     int port = 0,
-            type = SOCK_STREAM,
-            protocol = 0,
-            family = AF_INET,
-            queue = 16;
-    /* assign custom values */
+        type = SOCK_STREAM,
+        protocol = 0,
+        family = AF_INET,
+        queue = 16;
+    /* assign custom values if present */
     for (int i = 0; i < vargc; i++) {
         if (i == 0) port = va_arg(vargp, int);
         else if (i == 1) type = va_arg(vargp, int);
@@ -69,9 +68,8 @@ socket_open(int vargc, ...)
     s -> type = type;
     s -> protocol = protocol;
 
-    if ((s -> sockfd = socket(family, type, protocol)) == -1) {
+    if ((s -> sockfd = socket(family, type, protocol)) == - 1) {
         fprintf(stderr, "socket_open: cannot create new socket\n");
-        // TODO: quit
         return NULL;
     }
 
@@ -80,52 +78,48 @@ socket_open(int vargc, ...)
     s -> servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     s -> servaddr.sin_port        = htons(port);
 
-    if (bind(s -> sockfd, (struct sockaddr *) &s -> servaddr, sizeof(struct sockaddr_in)) == -1) {
+    if (bind(s -> sockfd, (struct sockaddr *) &s -> servaddr,
+             sizeof(struct sockaddr_in)) == - 1) {
         fprintf(stderr, "socket_open: cannot bind new socket\n");
-        // TODO: quit
         return NULL;
     }
 
     /* connection-oriented protocols need to call listen() */
     if (type == SOCK_STREAM || type == SOCK_SEQPACKET) {
-        if (listen(s -> sockfd, queue) == -1) {
+        if (listen(s -> sockfd, queue) == - 1) {
             fprintf(stderr, "socket_open: cannot listen new socket\n");
             return NULL;
         }
     }
-
-//    /* prints out random port */
-//    if (port == 0) printf("listening at port %d...\n", socket_port(s));
-
     return s;
 }
 
 /**
- * socket_listen(): waits for client connection - blocking call
- * @s: pointer to the Socket which will be used
+ * socket_accept(): opens a TCP connection on given socket (blocking call)
+ * @s: pointer to the Socket which will be used to accept a connection
  *
  * @return: file descriptor int for the recently accepted connection
  */
 int
-socket_listen(Socket *s)
+socket_accept(Socket *s)
 {
-    /* message-oriented error handling */
-    if (!(s -> type == SOCK_STREAM || s -> type == SOCK_SEQPACKET)) return -1;
-    /* connection-oriented */
+    if (!(s -> type == SOCK_STREAM || s -> type == SOCK_SEQPACKET)) return - 1;
+    
     if (s -> type == SOCK_STREAM || s -> type == SOCK_SEQPACKET) {
         unsigned int len = sizeof(s -> cliaddr);
-        if ((s -> connfd = accept(s -> sockfd, (struct sockaddr *) &s -> cliaddr, &len)) == -1) {
-//            fprintf(stderr, "socket_listen: cannot accept on new socket\n");
-            // TODO: fazer direito
-            return -1;
+        if ((s -> connfd = accept(s -> sockfd,
+                                  (struct sockaddr *) &s -> cliaddr,
+                                  &len)) == - 1) {
+            fprintf(stderr, "socket_accept: cannot accept connection\n");
+            return - 1;
         }
-        else return s -> connfd;
+        return s -> connfd;
     }
-    else return -1;
+    return - 1;
 }
 
 /**
- * socket_read(): tries to read the message and copy it to given buffer
+ * socket_read(): tries to read the socket and copy data to given buffer
  * @s: pointer for the Socket which will be read
  * @buffer: memory space where the message will be written
  * @buffersize: max message length, if any
@@ -136,13 +130,13 @@ socket_listen(Socket *s)
 int
 socket_read(int vargc, ...)
 {
-    if (vargc < 2) fprintf(stderr, "socket_read(): not enough args!");
+    if (vargc < 2) fprintf(stderr, "socket_read: not enough args!");
     /* parse va args */
     va_list vargp;
     va_start(vargp, vargc);
-    /* initialize with default values */
-    struct Socket *s = NULL;
-    void *buffer = NULL;
+    
+    struct Socket *s;
+    void *buffer;
     size_t buffersize = 0;
     int flags = 0;
     /* assign custom values */
@@ -155,16 +149,17 @@ socket_read(int vargc, ...)
     va_end(vargp);
     /* attempts to determine buffersize */
     if (!buffersize) buffersize = MALLOC_SIZE(buffer);
-    // TODO: how do we handle buffersize still being == 0?
+    if (!buffersize) {
+        fprintf(stderr, "socket_read: cannot determine buffer size\n");
+        return - 1;
+    }
 
-    /* wipes buffer clean */
+    /* wipes buffer clean before reading */
     memset(buffer, 0, buffersize);
-//	/* server -> client */
-//	if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
-//	/* client -> server */
-//	else return send(s -> sockfd, buffer, buffersize, flags);
-
-    return recv(s -> connfd, buffer, buffersize, flags);
+    /* server -> client */
+    if (s -> connfd) return recv(s -> connfd, buffer, buffersize, flags);
+    /* client -> server */
+    else return recv(s -> sockfd, buffer, buffersize, flags);
 }
 
 /**
@@ -178,9 +173,9 @@ socket_port(Socket *s)
 {
     struct sockaddr_in sin;
     socklen_t len = sizeof(sin);
-    if (getsockname(s -> sockfd, (struct sockaddr *)&sin, &len) != -1)
+    if (getsockname(s -> sockfd, (struct sockaddr *)&sin, &len) != - 1)
         return ntohs(sin.sin_port);
-    return 0;
+    return - 1;
 }
 
 /**
@@ -196,16 +191,16 @@ socket_port(Socket *s)
 Socket *
 socket_connect(int vargc, ...)
 {
-    if (vargc < 2) fprintf(stderr, "socket_connect(): not enough args!");
+    if (vargc < 2) fprintf(stderr, "socket_connect: not enough args!");
     /* parse va args */
     va_list vargp;
     va_start(vargp, vargc);
-    /* initialize with default values */
-    char *address = "127.0.0.1";
-    int port = 0,
-            type = SOCK_STREAM,
-            protocol = 0,
-            family = AF_INET;
+    
+    char *address;
+    int port,
+        type = SOCK_STREAM,
+        protocol = 0,
+        family = AF_INET;
     /* assign custom values */
     for (int i = 0; i < vargc; i++) {
         if (i == 0) address = va_arg(vargp, char *);
@@ -225,7 +220,7 @@ socket_connect(int vargc, ...)
     s -> type = type;
     s -> protocol = protocol;
 
-    if ((s -> sockfd = socket(family, type, protocol)) == -1) {
+    if ((s -> sockfd = socket(family, type, protocol)) == - 1) {
         fprintf(stderr, "socket_connect: cannot create new socket\n");
         return NULL;
     }
@@ -236,7 +231,8 @@ socket_connect(int vargc, ...)
     s -> servaddr.sin_port        = htons(port);
 
     /* attempts to connect to remote server */
-    if (connect(s -> sockfd, (struct sockaddr *) &s -> servaddr, sizeof(struct sockaddr_in)) != 0) {
+    if (connect(s -> sockfd, (struct sockaddr *) &s -> servaddr,
+                sizeof(struct sockaddr_in)) != 0) {
         fprintf(stderr, "socket_connect: cannot connect to server\n");
         return NULL;
     }
@@ -256,13 +252,13 @@ socket_connect(int vargc, ...)
 int
 socket_write(int vargc, ...)
 {
-    if (vargc < 2) fprintf(stderr, "socket_write(): not enough args!");
+    if (vargc < 2) fprintf(stderr, "socket_write: not enough args!");
     /* parse va args */
     va_list vargp;
     va_start(vargp, vargc);
-    /* initialize with default values */
-    struct Socket *s = NULL;
-    void *buffer = NULL;
+    
+    struct Socket *s;
+    void *buffer;
     size_t buffersize = 0;
     int flags = 0;
     /* assign custom values */
@@ -274,10 +270,12 @@ socket_write(int vargc, ...)
     }
     va_end(vargp);
     /* attempts to determine buffersize */
-    if (!buffersize) buffersize = strlen(buffer);
-    // TODO: dá pra inferir tamanho de struct?
     if (!buffersize) buffersize = MALLOC_SIZE(buffer);
-    // TODO: how do we handle buffersize still being == 0? QUIT
+    if (!buffersize) buffersize = strlen(buffer);
+    if (!buffersize) {
+        fprintf(stderr, "socket_write: cannot determine message length\n");
+        return - 1;
+    }
     /* server -> client */
     if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
     /* client -> server */
@@ -299,6 +297,7 @@ socket_writef(Socket *s, char *fmsg, ...)
     va_start(vargp, fmsg);
     int n = vsnprintf(NULL, 0, fmsg, vargp);
     va_end(vargp);
+    
     if (n >= 0) {
         va_start(vargp, fmsg);
         char buffer[n + 1];
@@ -326,11 +325,11 @@ socket_ip_client(Socket *s)
 char *
 socket_ip_server(Socket *s)
 {
-    struct sockaddr_in localAddress;
-    socklen_t addressLength = sizeof(localAddress);;
-    getsockname(s -> connfd, (struct sockaddr*) &localAddress, &addressLength);
+    struct sockaddr_in local_address;
+    socklen_t address_length = sizeof(local_address);;
+    getsockname(s -> connfd, (struct sockaddr*) &local_address, &address_length);
 
-    return inet_ntoa(localAddress.sin_addr);
+    return inet_ntoa(local_address.sin_addr);
 }
 
 /**

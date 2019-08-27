@@ -19,7 +19,7 @@ start_connection_handler(int *status, int port)
     dprint("bftp escutando na porta %d...\n", socket_port(s));
 
     while (true) {
-        if (socket_listen(s) < 0) break;
+        if (socket_accept(s) < 0) break;
         if (!fork()) start_control_handler(s, status);
     }
 }
