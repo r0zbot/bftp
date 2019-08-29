@@ -204,8 +204,8 @@ start_control_handler(Socket *s_arg, int *status)
             socket_printf(s, "Pass: %s\r\n", pass);
             socket_printf(s, "Buffer: %s\r\n", arg);
             socket_printf(s, "PID: %lu\r\n", getpid());
-            socket_printf(s, "IP Cliente: %s\r\n", socket_ip_client(s));
-            socket_printf(s, "IP Server: %s\r\n", socket_ip_server(s));
+            socket_printf(s, "IP Cliente: %s\r\n", socket_client_ip(s));
+            socket_printf(s, "IP Server: %s\r\n", socket_server_ip(s));
             socket_printf(s, "Port: %d\r\n", socket_port(s));
             if (data_s) socket_printf(s, "Data port: %d\r\n", socket_port(data_s));
         }
