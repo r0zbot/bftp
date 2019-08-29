@@ -28,7 +28,7 @@ start_control_handler(Socket *s_arg, int *status)
     char pass[MAX_PASS_LENGTH+1];
     char cwd[PATH_MAX];
     int type = UNDEF;
-    socket_printf(s, "220 BFTP - Batista's FTP Server [%s]\r\n", socket_ip_client(s));
+    socket_printf(s, "220 BFTP - Batista's FTP Server [%s]\r\n", socket_server_ip(s));
 
     bool logged = false;
     bool denied = false; // Set to true when user is denied access to a command
@@ -174,7 +174,7 @@ start_control_handler(Socket *s_arg, int *status)
         else if (AUTH_CMD("PASV")) {
             if (!data_s) data_s = socket_open(0);
             socket_printf(s, "227 Entering Passive Mode (%s,%d,%d).\r\n",
-                          pasv(socket_ip_server(s)),
+                          pasv(socket_server_ip(s)),
                           socket_port(data_s) / 256,
                           socket_port(data_s) % 256);
         }

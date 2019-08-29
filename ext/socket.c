@@ -308,21 +308,21 @@ socket_printf(Socket *s, char *fmsg, ...)
 }
 
 /**
- * socket_ip(): returns ip address of client in printable format
+ * socket_client_ip(): returns IPv4 address of client in printable format
  * @s: socket which will be read
  */
 char *
-socket_ip_client(Socket *s)
+socket_client_ip(Socket *s)
 {
     return inet_ntoa(s -> cliaddr.sin_addr);
 }
 
 /**
- * socket_ip(): returns ip address of server in printable format
+ * socket_server_ip(): returns IPv4 address of server in printable format
  * @s: socket which will be read
  */
 char *
-socket_ip_server(Socket *s)
+socket_server_ip(Socket *s)
 {
     struct sockaddr_in local_address;
     socklen_t address_length = sizeof(local_address);;
