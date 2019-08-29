@@ -135,8 +135,8 @@ socket_read(int vargc, ...)
     va_list vargp;
     va_start(vargp, vargc);
     
-    struct Socket *s;
-    void *buffer;
+    struct Socket *s = NULL;
+    void *buffer = NULL;
     size_t buffersize = 0;
     int flags = 0;
     /* assign custom values */
@@ -196,7 +196,7 @@ socket_connect(int vargc, ...)
     va_list vargp;
     va_start(vargp, vargc);
     
-    char *address;
+    char *address = NULL;
     int port,
         type = SOCK_STREAM,
         protocol = 0,
@@ -257,8 +257,8 @@ socket_write(int vargc, ...)
     va_list vargp;
     va_start(vargp, vargc);
     
-    struct Socket *s;
-    void *buffer;
+    struct Socket *s = NULL;
+    void *buffer = NULL;
     size_t buffersize = 0;
     int flags = 0;
     /* assign custom values */
