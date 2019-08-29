@@ -71,7 +71,7 @@ data_handler_receive_file(char *file, void *buffer, int type)
     
     if (fp) {
         while (socket_read(ds, buffer, BUFFER_SIZE) > 0) {
-            UNUSED(write(fileno(fp), buffer, BUFFER_SIZE));
+            (void) write(fileno(fp), buffer, BUFFER_SIZE);
         }
         fclose(fp);
         return 0;
