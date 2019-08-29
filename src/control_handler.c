@@ -36,7 +36,7 @@ start_control_handler(Socket *s_arg, int *status)
         stripln(buffer, BUFFER_SIZE); //remove os \r e \r\n
         char *cmd, *arg;
         cmd = strtok_r(buffer, " ", &arg);
-        getcwd(cwd, sizeof(char) * PATH_MAX);
+        UNUSED(getcwd(cwd, sizeof(char) * PATH_MAX));
         /******************************* USER *********************************/
         if (CMD("USER")) {
             if (!arg) socket_printf(s, "500 %s: command requires a parameter\r\n", cmd);
@@ -91,7 +91,7 @@ start_control_handler(Socket *s_arg, int *status)
                     strcat(command, cwd);
                     strcat(command, "\"");
                     fp = popen(command, "r");
-                    read(fileno(fp), buffer, BUFFER_SIZE);
+                    UNUSED(read(fileno(fp), buffer, BUFFER_SIZE));
                     pclose(fp);
                     start_data_handler(data_s, status);
                     data_handler_send((void *) buffer);

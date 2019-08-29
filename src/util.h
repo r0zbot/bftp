@@ -22,6 +22,8 @@
 #define BINARY 1
 #define ASCII  2
 
+#define UNUSED(expr) (void)(expr)
+
 char * concatf(const char* fmt, ...);
 
 int strncmpi(const char* s1, const char* s2, size_t n);
