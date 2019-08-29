@@ -110,7 +110,7 @@ data_handler_read(void *buffer)
  */
 void
 stop_data_handler() {
-    socket_fin(ds);
+    socket_finish(ds);
     socket_close(ds);
     exit(0);
 }

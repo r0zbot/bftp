@@ -34,7 +34,7 @@ int
 socket_write(int vargc, ...);
 
 int
-socket_writef(Socket *s, char *fmsg, ...);
+socket_printf(Socket *s, char *fmsg, ...);
 
 void
 socket_close(Socket *s);
@@ -46,7 +46,7 @@ int
 socket_port(Socket *s);
 
 void
-socket_fin(Socket *s);
+socket_finish(Socket *s);
 
 char *
 socket_ip_client(Socket *s);

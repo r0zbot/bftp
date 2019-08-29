@@ -8,7 +8,7 @@
 #undef socket_connect
 #undef socket_read
 #undef socket_write
-#undef socket_writef
+#undef socket_printf
 
 #ifdef _WIN32
     #include <alloc.h>
@@ -151,7 +151,7 @@ socket_read(int vargc, ...)
     if (!buffersize) buffersize = MALLOC_SIZE(buffer);
     if (!buffersize) {
         fprintf(stderr, "socket_read: cannot determine buffer size\n");
-        return - 1;
+        return 0;
     }
 
     /* wipes buffer clean before reading */
@@ -271,10 +271,9 @@ socket_write(int vargc, ...)
     va_end(vargp);
     /* attempts to determine buffersize */
     if (!buffersize) buffersize = MALLOC_SIZE(buffer);
-    if (!buffersize) buffersize = strlen(buffer);
     if (!buffersize) {
         fprintf(stderr, "socket_write: cannot determine message length\n");
-        return - 1;
+        return 0;
     }
     /* server -> client */
     if (s -> connfd) return send(s -> connfd, buffer, buffersize, flags);
@@ -283,14 +282,14 @@ socket_write(int vargc, ...)
 }
 
 /**
- * socket_writef(): writes formatted message on given socket
+ * socket_printf(): writes formatted message on given socket
  * @s: pointer to the socket which will be written
  * @fmsg: formatted message which we wish to write to socket
  *
  * @return: number of bytes written
  */
 int
-socket_writef(Socket *s, char *fmsg, ...)
+socket_printf(Socket *s, char *fmsg, ...)
 {
     /* parse va args */
     va_list vargp;
@@ -303,9 +302,9 @@ socket_writef(Socket *s, char *fmsg, ...)
         char buffer[n + 1];
         vsnprintf(buffer, n + 1, fmsg, vargp);
         va_end(vargp);
-        return socket_write(2, s, buffer);
+        return socket_write(3, s, buffer, strlen(buffer));
     }
-    return socket_write(2, s, fmsg);
+    return socket_write(3, s, fmsg, strlen(fmsg));
 }
 
 /**
@@ -345,11 +344,11 @@ socket_close(Socket *s)
 }
 
 /**
- * socket_fin(): closes connfd
+ * socket_finish(): closes connfd
  * @s: socket which will finish connection with client
  */
 void
-socket_fin(Socket *s)
+socket_finish(Socket *s)
 {
     shutdown(s -> connfd, SHUT_RDWR);
     close(s -> connfd);
