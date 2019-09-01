@@ -173,7 +173,7 @@ socket_connect(int vargc, ...)
     va_start(vargp, vargc);
     
     char *address = NULL;
-    int port,
+    int port = 0,
         type = SOCK_STREAM,
         protocol = 0;
     sa_family_t family = AF_INET;
