@@ -28,14 +28,7 @@ struct Socket {
 };
 
 /**
- * socket_open(): opens a port and returns its Socket pointer
- * @port: # of the port we wish to open
- * @type: socket type (TCP, UDP, ...)
- * @protocol: protocol used
- * @family: socket domain (AF_INET, ...)
- * @queue: max number of clients
- *
- * @return: a pointer to the newly created Socket.
+ * Creates a struct Socket and returns a pointer to it
  */
 Socket *
 socket_open(int vargc, ...)
@@ -47,14 +40,14 @@ socket_open(int vargc, ...)
     int port = 0,
         type = SOCK_STREAM,
         protocol = 0,
-        family = AF_INET,
         queue = 16;
+    sa_family_t family = AF_INET;
     /* assign custom values if present */
     for (int i = 0; i < vargc; i++) {
         if (i == 0) port = va_arg(vargp, int);
         else if (i == 1) type = va_arg(vargp, int);
         else if (i == 2) protocol = va_arg(vargp, int);
-        else if (i == 3) family = va_arg(vargp, int);
+        else if (i == 3) family = (sa_family_t) va_arg(vargp, int);
         else if (i == 4) queue = va_arg(vargp, int);
     }
     va_end(vargp);
@@ -95,10 +88,8 @@ socket_open(int vargc, ...)
 }
 
 /**
- * socket_accept(): opens a TCP connection on given socket (blocking call)
- * @s: pointer to the Socket which will be used to accept a connection
- *
- * @return: file descriptor int for the recently accepted connection
+ * Opens a TCP connection on given socket (blocking call)
+ * return: file descriptor int for the recently accepted connection
  */
 int
 socket_accept(Socket *s)
@@ -119,15 +110,10 @@ socket_accept(Socket *s)
 }
 
 /**
- * socket_read(): tries to read the socket and copy data to given buffer
- * @s: pointer for the Socket which will be read
- * @buffer: memory space where the message will be written
- * @buffersize: max message length, if any
- * @flags: special flags for recv() call
- *
- * @return: number of bytes read.
+ * Tries to read the socket and copy data to given buffer
+ * return: number of bytes read.
  */
-int
+ssize_t
 socket_read(int vargc, ...)
 {
     if (vargc < 2) fprintf(stderr, "socket_read: not enough args!");
@@ -163,10 +149,7 @@ socket_read(int vargc, ...)
 }
 
 /**
- * socket_port(): returns Socket's port number
- * @s: socket which will be used
- *
- * @return: port number
+ * Returns Socket's port number
  */
 int
 socket_port(Socket *s)
@@ -179,14 +162,7 @@ socket_port(Socket *s)
 }
 
 /**
- * socket_connect(): attempts to connect to a remote server
- * @address: IP address which we wish to connect to
- * @port: port number of the remote process
- * @type: socket type (TCP, UDP, ...)
- * @protocol: protocol used
- * @family: socket domain (AF_INET, ...)
- *
- * @return: pointer to the newly created Socket
+ * Attempts to connect to a remote server
  */
 Socket *
 socket_connect(int vargc, ...)
@@ -199,15 +175,15 @@ socket_connect(int vargc, ...)
     char *address = NULL;
     int port,
         type = SOCK_STREAM,
-        protocol = 0,
-        family = AF_INET;
+        protocol = 0;
+    sa_family_t family = AF_INET;
     /* assign custom values */
     for (int i = 0; i < vargc; i++) {
         if (i == 0) address = va_arg(vargp, char *);
         else if (i == 1) port = va_arg(vargp, int);
         else if (i == 2) type = va_arg(vargp, int);
         else if (i == 3) protocol = va_arg(vargp, int);
-        else if (i == 4) family = va_arg(vargp, int);
+        else if (i == 4) family = (sa_family_t) va_arg(vargp, int);
     }
     va_end(vargp);
 
@@ -241,15 +217,10 @@ socket_connect(int vargc, ...)
 }
 
 /**
- * socket_write(): writes given message on given socket
- * @s: pointer to the socket which will be written
- * @buffer: message we wish to write to socket
- * @buffersize: message length
- * @flags: optional flags for send() call
- *
- * @return: number of bytes written
+ * Writes given message on given socket
+ * return: number of bytes written
  */
-int
+ssize_t
 socket_write(int vargc, ...)
 {
     if (vargc < 2) fprintf(stderr, "socket_write: not enough args!");
@@ -282,13 +253,10 @@ socket_write(int vargc, ...)
 }
 
 /**
- * socket_printf(): writes formatted message on given socket
- * @s: pointer to the socket which will be written
- * @fmsg: formatted message which we wish to write to socket
- *
- * @return: number of bytes written
+ * Writes formatted message on given socket
+ * return: number of bytes written
  */
-int
+ssize_t
 socket_printf(Socket *s, char *fmsg, ...)
 {
     /* parse va args */
@@ -299,17 +267,22 @@ socket_printf(Socket *s, char *fmsg, ...)
     
     if (n >= 0) {
         va_start(vargp, fmsg);
-        char buffer[n + 1];
+        char *buffer = malloc(sizeof(char) * (n + 1));
+        if (!buffer) {
+            fprintf(stderr, "socket_printf: cannot malloc buffer\n");
+            return 0;
+        }
         vsnprintf(buffer, n + 1, fmsg, vargp);
         va_end(vargp);
-        return socket_write(3, s, buffer, strlen(buffer));
+        ssize_t bytes_written = socket_write(3, s, buffer, strlen(buffer));
+        free(buffer);
+        return bytes_written;
     }
     return socket_write(3, s, fmsg, strlen(fmsg));
 }
 
 /**
- * socket_client_ip(): returns IPv4 address of client in printable format
- * @s: socket which will be read
+ * Returns IPv4 address of client in printable format
  */
 char *
 socket_client_ip(Socket *s)
@@ -318,8 +291,7 @@ socket_client_ip(Socket *s)
 }
 
 /**
- * socket_server_ip(): returns IPv4 address of server in printable format
- * @s: socket which will be read
+ * Returns IPv4 address of server in printable format
  */
 char *
 socket_server_ip(Socket *s)
@@ -332,8 +304,7 @@ socket_server_ip(Socket *s)
 }
 
 /**
- * socket_close(): closes socket and frees malloc'd memory
- * @s: socket which will be closed
+ * Closes socket and frees malloc'd memory
  */
 void
 socket_close(Socket *s)
@@ -344,8 +315,7 @@ socket_close(Socket *s)
 }
 
 /**
- * socket_finish(): closes connfd
- * @s: socket which will finish connection with client
+ * Closes current connection
  */
 void
 socket_finish(Socket *s)
@@ -355,8 +325,8 @@ socket_finish(Socket *s)
 }
 
 /**
- * socket_test(): unit test
- * @return: 0 for success and 1 for error
+ * Unit test
+ * return: 0 for success and 1 for error
  */
 int
 socket_test()

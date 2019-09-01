@@ -2,7 +2,8 @@
 #define BUFFER_SIZE 1398
 
 void start_data_handler(Socket *ds, int *status);
+void stop_data_handler(void) __attribute__((noreturn));
 int data_handler_send_file(char *file, void *buffer, int type);
-void data_handler_send(void *msg);
 int data_handler_receive_file(char *file, void *buffer, int type);
-void stop_data_handler();
+void data_handler_send(void *msg);
+void data_handler_read(void *buffer);

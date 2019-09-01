@@ -7,8 +7,5 @@
 #include "util.h"
 #include "control_handler.h"
 
-void
-start_connection_handler(int *status, int port);
-
-void
-stop_connection_handler();
+void start_connection_handler(int *status, int port);
+void stop_connection_handler(void);

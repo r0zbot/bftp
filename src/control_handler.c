@@ -7,16 +7,12 @@
 #define CMD(str) (strncmpi(buffer, str, strlen(str)) == 0)
 #define AUTH_CMD(str) (CMD(str) && (denied = true) && logged)
 
-char *buffer;
-Socket *s = NULL;
-Socket *data_s = NULL;
+static char *buffer;
+static Socket *s = NULL;
+static Socket *data_s = NULL;
 
 /**
- * start_control_handler():
- *     Conversa com o cliente na conexão fornecida pelo processo principal.
- *
- * @s_arg: o socket no qual vamos conversar com o cliente
- * @status: indica em que fase o processo está
+ * Conversa com o cliente na conexão fornecida pelo processo principal.
  */
 void
 start_control_handler(Socket *s_arg, int *status)
@@ -36,7 +32,7 @@ start_control_handler(Socket *s_arg, int *status)
         stripln(buffer, BUFFER_SIZE); //remove os \r e \r\n
         char *cmd, *arg;
         cmd = strtok_r(buffer, " ", &arg);
-        (void) getcwd(cwd, sizeof(char) * PATH_MAX);
+        getcwd(cwd, sizeof(char) * PATH_MAX);
         /******************************* USER *********************************/
         if (CMD("USER")) {
             if (!arg) socket_printf(s, "500 %s: command requires a parameter\r\n", cmd);
@@ -91,7 +87,7 @@ start_control_handler(Socket *s_arg, int *status)
                     strcat(command, cwd);
                     strcat(command, "\"");
                     fp = popen(command, "r");
-                    (void) read(fileno(fp), buffer, BUFFER_SIZE);
+                    read(fileno(fp), buffer, BUFFER_SIZE);
                     pclose(fp);
                     start_data_handler(data_s, status);
                     data_handler_send((void *) buffer);
@@ -226,13 +222,11 @@ start_control_handler(Socket *s_arg, int *status)
 }
 
 /**
- * stop_control_handler():
- *     Fecha o socket e as conexões remanescentes, liberando a memória alocada.
+ * Fecha o socket e as conexões remanescentes, liberando a memória alocada.
  */
 void
 stop_control_handler() {
     socket_finish(s);
-    //socket_close(s); TODO: close just connfd socket on QUIT ?
     free(buffer);
     exit(0);
 }

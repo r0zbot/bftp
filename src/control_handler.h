@@ -11,8 +11,5 @@
 #include "util.h"
 #include "data_handler.h"
 
-void
-start_control_handler(Socket *s, int *status);
-
-void
-stop_control_handler();
+void start_control_handler(Socket *s, int *status);
+void stop_control_handler(void) __attribute__((noreturn));

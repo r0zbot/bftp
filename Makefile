@@ -8,7 +8,7 @@ DATDIR	= data
 
 CC	= gcc
 TARGET	= bftp
-CFLAGS	= -Ofast -msse2 -march=native -Wall -Wextra -Wpedantic -Wno-gnu-zero-variadic-macro-arguments
+CFLAGS	= -Ofast -msse2 -march=native -Wall -Wextra -Wno-gnu-zero-variadic-macro-arguments
 LFLAGS	=
 
 SOURCES	:= $(wildcard $(SRCDIR)/*.c)
