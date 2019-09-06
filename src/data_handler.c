@@ -35,10 +35,10 @@ data_handler_send_file(char *file, void *buffer, int type)
     if (fp) {
         struct stat st;
         stat(file, &st);
-        int bytes_read = 0;
-        while (bytes_read < st.st_size) {
-            bytes_read += read(fileno(fp), buffer, BUFFER_SIZE);
-            socket_write(ds, buffer, BUFFER_SIZE);
+        ssize_t bytes_read = 1;
+        while (bytes_read > 0) {
+            bytes_read = read(fileno(fp), buffer, BUFFER_SIZE);
+            if(bytes_read) socket_write(ds, buffer, bytes_read);
         }
         fclose(fp);
         return 0;
@@ -64,18 +64,6 @@ data_handler_receive_file(char *file, void *buffer, int type)
         return 0;
     }
     else return 1;
-}
-
-void
-data_handler_send(void *msg)
-{
-    socket_write(ds, msg);
-}
-
-void
-data_handler_read(void *buffer)
-{
-    socket_read(ds, buffer);
 }
 
 void

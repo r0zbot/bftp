@@ -1,3 +1,4 @@
+#include <errno.h>
 #include "control_handler.h"
 
 #define MAX_PASS_LENGTH 32
@@ -90,15 +91,22 @@ start_control_handler(Socket *s_arg, int *status)
                     read(fileno(fp), buffer, BUFFER_SIZE);
                     pclose(fp);
                     start_data_handler(data_s, status);
-                    data_handler_send((void *) buffer);
+                    socket_write(data_s, (void *) buffer, strlen(buffer));
                     socket_printf(s, "226 Transfer complete\r\n");
                     stop_data_handler();
                 }
             }
+            else{
+                socket_printf(s, "425 %s: No connection established\r\n", arg);
+            }
         }
         /******************************* RETR *********************************/
         else if (AUTH_CMD("RETR")) {
-            if (data_s) {
+            struct stat st;
+            if(stat(arg, &st)){
+                socket_printf(s, "550 %s: Cannot read file\r\n", arg);
+            }
+            else if (data_s) {
                 if (type == BINARY)
                     socket_printf(s, "150 Opening BINARY mode data connection for %s\r\n", arg);
                 else
@@ -110,10 +118,13 @@ start_control_handler(Socket *s_arg, int *status)
                     if (!data_handler_send_file(arg, (void *) buffer, type))
                         socket_printf(s, "226 Transfer complete\r\n");
                     else
-                        socket_printf(s, "550 %s: No such file or directory\r\n", arg);
+                        socket_printf(s, "550 %s: Cannot read file\r\n", arg);
                     
                     stop_data_handler();
                 }
+            }
+            else{
+                socket_printf(s, "425 %s: No connection established\r\n", arg);
             }
         }
         /******************************* STOR *********************************/
@@ -129,7 +140,7 @@ start_control_handler(Socket *s_arg, int *status)
                 if (!data_handler_receive_file(arg, (void *) buffer, type))
                     socket_printf(s, "226 Transfer complete\r\n");
                 else
-                    socket_printf(s, "550 %s: No such file or directory\r\n", arg);
+                    socket_printf(s, "550 %s: Could not write file\r\n", arg);
                 
                 stop_data_handler();
             }
