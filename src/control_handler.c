@@ -90,7 +90,7 @@ start_control_handler(Socket *s_arg, int *status)
                     read(fileno(fp), buffer, BUFFER_SIZE);
                     pclose(fp);
                     start_data_handler(data_s, status);
-                    data_handler_send((void *) buffer);
+                    socket_write(data_s, (void *) buffer, strlen(buffer));
                     socket_printf(s, "226 Transfer complete\r\n");
                     stop_data_handler();
                 }

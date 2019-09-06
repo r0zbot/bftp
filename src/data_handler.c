@@ -67,18 +67,6 @@ data_handler_receive_file(char *file, void *buffer, int type)
 }
 
 void
-data_handler_send(void *msg)
-{
-    socket_write(ds, msg);
-}
-
-void
-data_handler_read(void *buffer)
-{
-    socket_read(ds, buffer);
-}
-
-void
 stop_data_handler() {
     socket_finish(ds);
     exit(0);
