@@ -67,7 +67,10 @@ data_handler_receive_file(char *file, void *buffer, int type)
 }
 
 void
-stop_data_handler() {
+stop_data_handler(char *buffer, Socket *s, Socket *ds) {
+    free(buffer);
+    free(s);
     socket_finish(ds);
+    free(ds);
     exit(0);
 }

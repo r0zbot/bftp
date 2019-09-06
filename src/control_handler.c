@@ -21,10 +21,11 @@ start_control_handler(Socket *s_arg, int *status)
     s = s_arg;
     buffer = emalloc(sizeof(char) * BUFFER_SIZE);
     *status = CONTROL;
-    char user[MAX_USER_LENGTH+1];
-    char pass[MAX_PASS_LENGTH+1];
+    char user[MAX_USER_LENGTH + 1];
+    char pass[MAX_PASS_LENGTH + 1];
     char cwd[PATH_MAX];
     int type = UNDEF;
+    
     socket_printf(s, "220 BFTP - Batista's FTP Server [%s]\r\n", socket_server_ip(s));
 
     bool logged = false;
@@ -93,19 +94,17 @@ start_control_handler(Socket *s_arg, int *status)
                     start_data_handler(data_s, status);
                     socket_write(data_s, (void *) buffer, strlen(buffer));
                     socket_printf(s, "226 Transfer complete\r\n");
-                    stop_data_handler();
+                    stop_data_handler(buffer, s, data_s);
                 }
             }
-            else{
+            else
                 socket_printf(s, "425 %s: No connection established\r\n", arg);
-            }
         }
         /******************************* RETR *********************************/
         else if (AUTH_CMD("RETR")) {
             struct stat st;
-            if(stat(arg, &st)){
+            if (stat(arg, &st))
                 socket_printf(s, "550 %s: Cannot read file\r\n", arg);
-            }
             else if (data_s) {
                 if (type == BINARY)
                     socket_printf(s, "150 Opening BINARY mode data connection for %s\r\n", arg);
@@ -120,12 +119,11 @@ start_control_handler(Socket *s_arg, int *status)
                     else
                         socket_printf(s, "550 %s: Cannot read file\r\n", arg);
                     
-                    stop_data_handler();
+                    stop_data_handler(buffer, s, data_s);
                 }
             }
-            else{
+            else
                 socket_printf(s, "425 %s: No connection established\r\n", arg);
-            }
         }
         /******************************* STOR *********************************/
         else if (AUTH_CMD("STOR")) {
@@ -142,7 +140,7 @@ start_control_handler(Socket *s_arg, int *status)
                 else
                     socket_printf(s, "550 %s: Could not write file\r\n", arg);
                 
-                stop_data_handler();
+                stop_data_handler(buffer, s, data_s);
             }
         }
         /******************************* RMD *********************************/
@@ -175,7 +173,6 @@ start_control_handler(Socket *s_arg, int *status)
             }
             else
                 socket_printf(s, "504 TYPE not implemented for %s parameter\r\n", arg);
-
         }
         /******************************* PASV *********************************/
         else if (AUTH_CMD("PASV")) {
@@ -201,7 +198,6 @@ start_control_handler(Socket *s_arg, int *status)
         /******************************* SIZE *********************************/
         else if (AUTH_CMD("SIZE")) {
             struct stat st;
-
             if (stat(arg, &st) == 0) socket_printf(s, "213 %d\r\n", st.st_size);
             else socket_printf(s, "550 %s: Could not get size of %s\r\n", arg);
         }
@@ -228,7 +224,6 @@ start_control_handler(Socket *s_arg, int *status)
         if (strlen(user) && strlen(pass)) logged = true;
         else logged = false;
         denied = false;
-
     }
 }
 
@@ -238,6 +233,8 @@ start_control_handler(Socket *s_arg, int *status)
 void
 stop_control_handler() {
     socket_finish(s);
+    socket_close(s);
+    if (data_s) socket_close(data_s);
     free(buffer);
     exit(0);
 }
