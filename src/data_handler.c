@@ -35,11 +35,12 @@ data_handler_send_file(char *file, void *buffer, int type)
     if (fp) {
         struct stat st;
         stat(file, &st);
-        ssize_t bytes_read = 1;
-        while (bytes_read > 0) {
+        ssize_t bytes_read = 0;
+        do {
             bytes_read = read(fileno(fp), buffer, BUFFER_SIZE);
-            if(bytes_read) socket_write(ds, buffer, bytes_read);
-        }
+            if (bytes_read > 0) socket_write(ds, buffer, bytes_read);
+        } while (bytes_read > 0);
+        
         fclose(fp);
         return 0;
     }
@@ -55,11 +56,12 @@ data_handler_receive_file(char *file, void *buffer, int type)
     FILE *fp;
     if (type == BINARY) fp = fopen(file, "wb");
     else fp = fopen(file, "w");
-    
     if (fp) {
-        while (socket_read(ds, buffer, BUFFER_SIZE) > 0) {
-            write(fileno(fp), buffer, BUFFER_SIZE);
-        }
+        ssize_t bytes_rcvd = 0;
+        do {
+            bytes_rcvd = socket_read(ds, buffer, BUFFER_SIZE);
+            if (bytes_rcvd > 0) write(fileno(fp), buffer, bytes_rcvd);
+        } while (bytes_rcvd > 0);
         fclose(fp);
         return 0;
     }
