@@ -2,7 +2,7 @@
  * Socket: helper functions to handle sockets in C
  *
  * Bruno Carneiro da Cunha <brunocarneirodacunha@usp.br>
- * Dani Martinez
+ * Daniel Martinez         <dev@danielsmartinez.com>
  ******************************************************************************/
 
 #include <sys/socket.h>
