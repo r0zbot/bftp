@@ -54,3 +54,6 @@ dkms.conf
 # CLion stuff
 cmake-build-debug/
 .idea/
+
+#ftp dirs
+ftp/*
