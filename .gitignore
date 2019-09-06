@@ -54,3 +54,6 @@ dkms.conf
 # CLion stuff
 cmake-build-debug/
 .idea/
+
+# macOS stuff
+.DS_Store
